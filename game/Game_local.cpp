@@ -4409,3 +4409,47 @@ idGameLocal::GetMapLoadingGUI
 ===============
 */
 void idGameLocal::GetMapLoadingGUI( char gui[ MAX_STRING_CHARS ] ) { }
+
+/*
+===============
+[D3R] idGameLocal::GetUniformOffset
+===============
+*/
+void idGameLocal::GetUniformOffset(idVec2& res, float spread)
+{
+	float rad = spread * idMath::Sqrt(random.RandomFloat());
+	float theta = idMath::TWO_PI * random.RandomFloat();
+
+	res.x = DEG2RAD(rad * idMath::Cos(theta));
+	res.y = DEG2RAD(rad * idMath::Sin(theta));
+}
+
+/*
+===============
+[D3R] idGameLocal::GetNormalizedOffset
+===============
+*/
+void idGameLocal::GetNormalizedOffset(idVec2& res, float spread, float deviations)
+{
+	float cap = spread * spread;
+	float standDev = idMath::Sqrt(cap * 0.5f) / deviations;
+
+	float x, y, s;
+	do
+	{
+		x = random.RandomFloat() * 2.0f - 1.0f;
+		y = random.RandomFloat() * 2.0f - 1.0f;
+		s = x * x + y * y;
+	} while (s >= 1.0f || !s);
+
+	s = idMath::Sqrt(-2.0f * idMath::Log(s) / s) * standDev;
+
+	res.x = x * s;
+	res.y = y * s;
+
+	if (res.LengthSqr() > cap)
+		res.Truncate(spread);
+
+	res.x = DEG2RAD(res.x);
+	res.y = DEG2RAD(res.y);
+}

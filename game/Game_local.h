@@ -448,6 +448,10 @@ public:
 
 	bool					NeedRestart();
 
+	// [D3R] For getting spread offsets
+	void					GetUniformOffset(idVec2& res, float spread);
+	void					GetNormalizedOffset(idVec2& res, float spread, float deviations = 2.0f);
+
 private:
 	const static int		INITIAL_SPAWN_COUNT = 1;
 	const static int		INTERNAL_SAVEGAME_VERSION = 1; // DG: added this for >= 1305 savegames

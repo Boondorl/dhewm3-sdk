@@ -47,7 +47,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 
-static const int BFG_DAMAGE_FREQUENCY			= 333;
+static const int BFG_DAMAGE_FREQUENCY			= 100;
 static const float BOUNCE_SOUND_MIN_VELOCITY	= 200.0f;
 static const float BOUNCE_SOUND_MAX_VELOCITY	= 400.0f;
 

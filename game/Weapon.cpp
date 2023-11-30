@@ -65,7 +65,7 @@ const idEventDef EV_Weapon_WeaponHolstered( "weaponHolstered" );
 const idEventDef EV_Weapon_WeaponRising( "weaponRising" );
 const idEventDef EV_Weapon_WeaponLowering( "weaponLowering" );
 const idEventDef EV_Weapon_Flashlight( "flashlight", "d" );
-const idEventDef EV_Weapon_LaunchProjectiles( "launchProjectiles", "dffff" );
+const idEventDef EV_Weapon_LaunchProjectiles( "launchProjectiles", "dfffff" );
 const idEventDef EV_Weapon_CreateProjectile( "createProjectile", NULL, 'e' );
 const idEventDef EV_Weapon_EjectBrass( "ejectBrass" );
 const idEventDef EV_Weapon_Melee( "melee", NULL, 'd' );
@@ -2797,7 +2797,7 @@ void idWeapon::Event_CreateProjectile( void ) {
 idWeapon::Event_LaunchProjectiles
 ================
 */
-void idWeapon::Event_LaunchProjectiles( int num_projectiles, float spread, float fuseOffset, float launchPower, float dmgPower ) {
+void idWeapon::Event_LaunchProjectiles( int num_projectiles, float inaccuracy, float spread, float fuseOffset, float launchPower, float dmgPower ) {
 	idProjectile	*proj;
 	idEntity		*ent;
 	int				i;
@@ -2883,17 +2883,34 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float spread, float
 		kick_endtime = gameLocal.realClientTime + muzzle_kick_maxtime;
 	}
 
+	idVec2 ofs = vec2_origin;
+	idVec3 forward = playerViewAxis[0];
+	idVec3 left = playerViewAxis[1];
+	idVec3 up = playerViewAxis[2];
+	// [D3R] Inaccuracy is applied once before anything else
+	if (inaccuracy)
+	{
+		gameLocal.GetUniformOffset(ofs, inaccuracy);
+		forward = forward + left * idMath::Tan(ofs.x) + up * idMath::Tan(ofs.y);
+		forward.Normalize();
+		forward.OrthogonalBasis(left, up);
+	}
+
 	if ( gameLocal.isClient ) {
 
 		// predict instant hit projectiles
 		if ( projectileDict.GetBool( "net_instanthit" ) ) {
-			float spreadRad = DEG2RAD( spread );
 			muzzle_pos = muzzleOrigin + playerViewAxis[ 0 ] * 2.0f;
 			for( i = 0; i < num_projectiles; i++ ) {
-				ang = idMath::Sin( spreadRad * gameLocal.random.RandomFloat() );
-				spin = (float)DEG2RAD( 360.0f ) * gameLocal.random.RandomFloat();
-				dir = playerViewAxis[ 0 ] + playerViewAxis[ 2 ] * ( ang * idMath::Sin( spin ) ) - playerViewAxis[ 1 ] * ( ang * idMath::Cos( spin ) );
-				dir.Normalize();
+				dir = forward;
+				// [D3R] Normalize spread instead of using a uniform offset (makes shotguns feel more natural)
+				if (spread)
+				{
+					gameLocal.GetNormalizedOffset(ofs, spread);
+					dir = forward + left * idMath::Tan(ofs.x) + up * idMath::Tan(ofs.y);
+					dir.Normalize();
+				}
+
 				gameLocal.clip.Translation( tr, muzzle_pos, muzzle_pos + dir * 4096.0f, NULL, mat3_identity, MASK_SHOT_RENDERMODEL, owner );
 				if ( tr.fraction < 1.0f ) {
 					idProjectile::ClientPredictionCollide( this, projectileDict, tr, vec3_origin, true );
@@ -2907,12 +2924,15 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float spread, float
 
 		owner->AddProjectilesFired( num_projectiles );
 
-		float spreadRad = DEG2RAD( spread );
 		for( i = 0; i < num_projectiles; i++ ) {
-			ang = idMath::Sin( spreadRad * gameLocal.random.RandomFloat() );
-			spin = (float)DEG2RAD( 360.0f ) * gameLocal.random.RandomFloat();
-			dir = playerViewAxis[ 0 ] + playerViewAxis[ 2 ] * ( ang * idMath::Sin( spin ) ) - playerViewAxis[ 1 ] * ( ang * idMath::Cos( spin ) );
-			dir.Normalize();
+			dir = forward;
+			// [D3R] Normalize spread instead of using a uniform offset (makes shotguns feel more natural)
+			if (spread)
+			{
+				gameLocal.GetNormalizedOffset(ofs, spread);
+				dir = forward + left * idMath::Tan(ofs.x) + up * idMath::Tan(ofs.y);
+				dir.Normalize();
+			}
 
 			if ( projectileEnt ) {
 				ent = projectileEnt;

@@ -343,7 +343,7 @@ private:
 	void					Event_GetLightParm( int parmnum );
 	void					Event_SetLightParm( int parmnum, float value );
 	void					Event_SetLightParms( float parm0, float parm1, float parm2, float parm3 );
-	void					Event_LaunchProjectiles( int num_projectiles, float spread, float fuseOffset, float launchPower, float dmgPower );
+	void					Event_LaunchProjectiles( int num_projectiles, float inaccuracy, float spread, float fuseOffset, float launchPower, float dmgPower ); // [D3R] Inaccuracy and spread now have separate functionality
 	void					Event_CreateProjectile( void );
 	void					Event_EjectBrass( void );
 	void					Event_Melee( void );
