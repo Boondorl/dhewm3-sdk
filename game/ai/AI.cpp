@@ -4083,12 +4083,8 @@ idProjectile *idAI::LaunchProjectile( const char *jointname, idEntity *target, b
 	idBounds			projBounds;
 	float				distance;
 	const idClipModel	*projClip;
-	float				attack_accuracy;
 	float				attack_cone;
-	float				projectile_spread;
 	float				diff;
-	float				angle;
-	float				spin;
 	idAngles			ang;
 	int					num_projectiles;
 	int					i;
@@ -4101,9 +4097,7 @@ idProjectile *idAI::LaunchProjectile( const char *jointname, idEntity *target, b
 		return NULL;
 	}
 
-	attack_accuracy = spawnArgs.GetFloat( "attack_accuracy", "7" );
 	attack_cone = spawnArgs.GetFloat( "attack_cone", "70" );
-	projectile_spread = spawnArgs.GetFloat( "projectile_spread", "0" );
 	num_projectiles = spawnArgs.GetInt( "num_projectiles", "1" );
 
 	GetMuzzle( jointname, muzzle, axis );
@@ -4153,11 +4147,7 @@ idProjectile *idAI::LaunchProjectile( const char *jointname, idEntity *target, b
 	GetAimDir( muzzle, target, this, dir );
 	ang = dir.ToAngles();
 
-	// adjust his aim so it's not perfect.  uses sine based movement so the tracers appear less random in their spread.
-	float t = MS2SEC( gameLocal.time + entityNumber * 497 );
-	ang.pitch += idMath::Sin16( t * 5.1 ) * attack_accuracy;
-	ang.yaw	+= idMath::Sin16( t * 6.7 ) * attack_accuracy;
-
+	// [D3R] This is now done before accounting for any kind of inaccuracy
 	if ( clampToAttackCone ) {
 		// clamp the attack direction to be within monster's attack cone so he doesn't do
 		// things like throw the missile backwards if you're behind him
@@ -4171,13 +4161,30 @@ idProjectile *idAI::LaunchProjectile( const char *jointname, idEntity *target, b
 
 	axis = ang.ToMat3();
 
-	float spreadRad = DEG2RAD( projectile_spread );
+	idVec2 ofs = vec2_origin;
+	idVec3 forward = axis[0];
+	idVec3 left = axis[1];
+	idVec3 up = axis[2];
+
+	float inaccuracy = spawnArgs.GetFloat("inaccuracy"); // [D3R] Use inaccuracy instead of attack_accuracy for consistency
+	if (inaccuracy)
+	{
+		gameLocal.GetUniformOffset(ofs, inaccuracy);
+		forward = forward + left * idMath::Tan(ofs.x) + up * idMath::Tan(ofs.y);
+		forward.Normalize();
+		forward.OrthogonalBasis(left, up);
+	}
+
+	float spread = spawnArgs.GetFloat("spread"); // [D3R] Use spread instead of proj_spread for consistency
 	for( i = 0; i < num_projectiles; i++ ) {
 		// spread the projectiles out
-		angle = idMath::Sin( spreadRad * gameLocal.random.RandomFloat() );
-		spin = (float)DEG2RAD( 360.0f ) * gameLocal.random.RandomFloat();
-		dir = axis[ 0 ] + axis[ 2 ] * ( angle * idMath::Sin( spin ) ) - axis[ 1 ] * ( angle * idMath::Cos( spin ) );
-		dir.Normalize();
+		dir = forward;
+		if (spread) // [D3R] Normalize spread to make things like shotguns more consistent
+		{
+			gameLocal.GetNormalizedOffset(ofs, spread);
+			dir = forward + left * idMath::Tan(ofs.x) + up * idMath::Tan(ofs.y);
+			dir.Normalize();
+		}
 
 		// launch the projectile
 		if ( !projectile.GetEntity() ) {

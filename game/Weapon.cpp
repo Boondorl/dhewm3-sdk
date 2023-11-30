@@ -2802,8 +2802,6 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float inaccuracy, f
 	idEntity		*ent;
 	int				i;
 	idVec3			dir;
-	float			ang;
-	float			spin;
 	float			distance;
 	trace_t			tr;
 	idVec3			start;
