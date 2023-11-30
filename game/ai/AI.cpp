@@ -4347,7 +4347,7 @@ bool idAI::AttackMelee( const char *meleeDefName ) {
 	// check for the "saving throw" automatic melee miss on lethal blow
 	// stupid place for this.
 	bool forceMiss = false;
-	if ( enemyEnt->IsType( idPlayer::Type ) && g_skill.GetInteger() < 2 ) {
+	if ( enemyEnt->IsType( idPlayer::Type ) && g_skill.GetInteger() == 0 ) { // [D3R] Only do this on Easy difficulty now
 		int	damage, armor;
 		idPlayer *player = static_cast<idPlayer*>( enemyEnt );
 		player->CalcDamagePoints( this, this, meleeDef, 1.0f, INVALID_JOINT, &damage, &armor );

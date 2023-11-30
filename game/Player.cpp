@@ -401,7 +401,7 @@ void idInventory::RestoreInventory( idPlayer *owner, const idDict &dict ) {
 	// weapons are stored as a number for persistant data, but as strings in the entityDef
 	weapons	= dict.GetInt( "weapon_bits", "0" );
 
-	if ( g_skill.GetInteger() >= 3 ) {
+	if ( g_skill.GetInteger() == 3 ) { // [D3R] Originally had a >= check, the only one that wasn't a direct comparison
 		Give( owner, dict, "weapon", dict.GetString( "weapon_nightmare" ), NULL, false );
 	} else {
 		Give( owner, dict, "weapon", dict.GetString( "weapon" ), NULL, false );
@@ -1575,21 +1575,16 @@ void idPlayer::Spawn( void ) {
 	inventory.selPDA = 0;
 
 	if ( !gameLocal.isMultiplayer ) {
-		if ( g_skill.GetInteger() < 2 ) {
+		g_damageScale.SetFloat(1.0f); // [D3R] Always reset this back to normal
+		g_armorProtection.SetFloat(0.5f); // [D3R] Armor always absorbs half damage to stop it from sucking so much...
+
+		if ( g_skill.GetInteger() == 0 ) { // [D3R] Only available on Easy difficulty now
 			if ( health < 25 ) {
 				health = 25;
 			}
-			if ( g_useDynamicProtection.GetBool() ) {
-				g_damageScale.SetFloat( 1.0f );
-			}
-		} else {
-			g_damageScale.SetFloat( 1.0f );
-			g_armorProtection.SetFloat( ( g_skill.GetInteger() < 2 ) ? 0.4f : 0.2f );
-
-			if ( g_skill.GetInteger() == 3 ) {
-				healthTake = true;
-				nextHealthTake = gameLocal.time + g_healthTakeTime.GetInteger() * 1000;
-			}
+		} else if (g_skill.GetInteger() == 3) {
+			healthTake = true;
+			nextHealthTake = gameLocal.time + g_healthTakeTime.GetInteger() * 1000;
 		}
 	}
 }
@@ -6604,27 +6599,7 @@ void idPlayer::CalcDamagePoints( idEntity *inflictor, idEntity *attacker, const 
 	damage = GetDamageForLocation( damage, location );
 
 	idPlayer *player = attacker->IsType( idPlayer::Type ) ? static_cast<idPlayer*>(attacker) : NULL;
-	if ( !gameLocal.isMultiplayer ) {
-		if ( inflictor != gameLocal.world ) {
-			switch ( g_skill.GetInteger() ) {
-				case 0:
-					damage *= 0.80f;
-					if ( damage < 1 ) {
-						damage = 1;
-					}
-					break;
-				case 2:
-					damage *= 1.70f;
-					break;
-				case 3:
-					damage *= 3.5f;
-					break;
-				default:
-					break;
-			}
-		}
-	}
-
+	// [D3R] All difficulties now have the same damage. Balance is handled elsewhere
 	damage *= damageScale;
 
 	// always give half damage if hurting self
@@ -6809,7 +6784,7 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 
 		if ( !gameLocal.isMultiplayer ) {
 			float scale = g_damageScale.GetFloat();
-			if ( g_useDynamicProtection.GetBool() && g_skill.GetInteger() < 2 ) {
+			if ( g_useDynamicProtection.GetBool() && g_skill.GetInteger() == 0 ) { // [D3R] Dynamic protection only works on Easy difficulty now
 				if ( gameLocal.time > lastDmgTime + 500 && scale > 0.25f ) {
 					scale -= 0.05f;
 					g_damageScale.SetFloat( scale );
