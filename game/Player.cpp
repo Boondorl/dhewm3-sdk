@@ -4663,6 +4663,7 @@ void idPlayer::CrashLand( const idVec3 &oldOrigin, const idVec3 &oldVelocity ) {
 		hardDelta	= 45.0f;
 	}
 
+	// [D3R TODO] Make this scale much smoother.
 	if ( delta > fatalDelta ) {
 		AI_HARDLANDING = true;
 		landChange = -32;

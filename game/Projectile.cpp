@@ -1822,19 +1822,31 @@ void idBFGProjectile::Think( void ) {
 					org = beamTargets[i].target.GetEntity()->GetPhysics()->GetOrigin() - GetPhysics()->GetOrigin();
 					org.Normalize();
 					beamTargets[i].target.GetEntity()->Damage( this, owner.GetEntity(), org, damageFreq, ( damagePower ) ? damagePower : 1.0f, INVALID_JOINT );
+					if (beamTargets[i].modelDefHandle < 0) {
+						beamTargets[i].modelDefHandle = gameRenderWorld->AddEntityDef(&beamTargets[i].renderEntity);
+					}
 				} else {
 					beamTargets[i].renderEntity.shaderParms[ SHADERPARM_RED ] =
 					beamTargets[i].renderEntity.shaderParms[ SHADERPARM_GREEN ] =
 					beamTargets[i].renderEntity.shaderParms[ SHADERPARM_BLUE ] =
 					beamTargets[i].renderEntity.shaderParms[ SHADERPARM_ALPHA ] = 0.0f;
+					if (beamTargets[i].modelDefHandle >= 0) {
+						gameRenderWorld->FreeEntityDef(beamTargets[i].modelDefHandle);
+						beamTargets[i].modelDefHandle = -1;
+					}
 					bfgVision = false;
 				}
 				if ( player ) {
 					player->playerView.EnableBFGVision( bfgVision );
 				}
-				nextDamageTime = gameLocal.time + BFG_DAMAGE_FREQUENCY;
 			}
-			gameRenderWorld->UpdateEntityDef( beamTargets[i].modelDefHandle, &beamTargets[i].renderEntity );
+			if (beamTargets[i].modelDefHandle >= 0) {
+				gameRenderWorld->UpdateEntityDef(beamTargets[i].modelDefHandle, &beamTargets[i].renderEntity);
+			}
+		}
+
+		if ( gameLocal.time > nextDamageTime ) {
+			nextDamageTime = gameLocal.time + BFG_DAMAGE_FREQUENCY;
 		}
 
 		if ( secondModelDefHandle >= 0 ) {
@@ -1917,10 +1929,6 @@ void idBFGProjectile::Launch( const idVec3 &start, const idVec3 &dir, const idVe
 			continue;
 		}
 
-		if ( !ent->CanDamage( GetPhysics()->GetOrigin(), damagePoint ) ) {
-			continue;
-		}
-
 		if ( ent->IsType( idPlayer::Type ) ) {
 			idPlayer *player = static_cast<idPlayer*>( ent );
 			player->playerView.EnableBFGVision( true );
@@ -1943,7 +1951,7 @@ void idBFGProjectile::Launch( const idVec3 &start, const idVec3 &dir, const idVe
 		bt.renderEntity.bounds.Clear();
 		bt.renderEntity.customSkin = declManager->FindSkin( skin );
 		bt.target = ent;
-		bt.modelDefHandle = gameRenderWorld->AddEntityDef( &bt.renderEntity );
+		bt.modelDefHandle = -1;
 		beamTargets.Append( bt );
 	}
 	if ( numListedEntities ) {
@@ -2020,17 +2028,13 @@ void idBFGProjectile::Explode( const trace_t &collision, idEntity *ignore ) {
 		if ( damage[0] && ( beamTargets[i].target.GetEntity()->entityNumber > gameLocal.numClients - 1 ) ) {
 			dir = beamTargets[i].target.GetEntity()->GetPhysics()->GetOrigin() - GetPhysics()->GetOrigin();
 			dir.Normalize();
-			beamTargets[i].target.GetEntity()->Damage( this, ownerEnt, dir, damage, damageScale, ( collision.c.id < 0 ) ? CLIPMODEL_ID_TO_JOINT_HANDLE( collision.c.id ) : INVALID_JOINT );
+			beamTargets[i].target.GetEntity()->Damage( this, ownerEnt, dir, damage, damageScale, INVALID_JOINT );
 		}
 	}
 
 	if ( secondModelDefHandle >= 0 ) {
 		gameRenderWorld->FreeEntityDef( secondModelDefHandle );
 		secondModelDefHandle = -1;
-	}
-
-	if ( ignore == NULL ) {
-		projectileFlags.noSplashDamage = true;
 	}
 
 	if ( !gameLocal.isClient ) {
