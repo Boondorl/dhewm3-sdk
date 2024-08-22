@@ -1162,6 +1162,7 @@ void idPlayer::LinkScriptVariables( void ) {
 	AI_TELEPORT.LinkTo(			scriptObject, "AI_TELEPORT" );
 	AI_TURN_LEFT.LinkTo(		scriptObject, "AI_TURN_LEFT" );
 	AI_TURN_RIGHT.LinkTo(		scriptObject, "AI_TURN_RIGHT" );
+	AI_AIMING.LinkTo(			scriptObject, "AI_AIMING" );
 }
 
 /*
@@ -1372,6 +1373,7 @@ void idPlayer::Init( void ) {
 	AI_TELEPORT		= false;
 	AI_TURN_LEFT	= false;
 	AI_TURN_RIGHT	= false;
+	AI_AIMING		= false;
 
 	// reset the script object
 	ConstructScriptObject();
@@ -2677,6 +2679,7 @@ void idPlayer::EnterCinematic( void ) {
 	AI_TELEPORT		= false;
 	AI_TURN_LEFT	= false;
 	AI_TURN_RIGHT	= false;
+	AI_AIMING		= false;
 }
 
 /*
@@ -2732,7 +2735,7 @@ void idPlayer::UpdateConditions( void ) {
 		AI_STRAFE_RIGHT	= false;
 	}
 
-	AI_RUN			= ( usercmd.buttons & BUTTON_RUN ) && ( ( !pm_stamina.GetFloat() ) || ( stamina > pm_staminathreshold.GetFloat() ) );
+	AI_RUN			= (usercmd.buttons & BUTTON_RUN) && !AI_RELOAD && !AI_AIMING && zoomFov.IsDone(gameLocal.time) && ((!pm_stamina.GetFloat()) || (stamina > pm_staminathreshold.GetFloat()));
 	AI_DEAD			= ( health <= 0 );
 }
 
@@ -5691,7 +5694,7 @@ void idPlayer::AdjustSpeed( void ) {
 	} else if ( noclip ) {
 		speed = pm_noclipspeed.GetFloat();
 		bobFrac = 0.0f;
-	} else if ( !physicsObj.OnLadder() && ( usercmd.buttons & BUTTON_RUN ) && ( usercmd.forwardmove || usercmd.rightmove ) && ( usercmd.upmove >= 0 ) ) {
+	} else if ( !physicsObj.OnLadder() && ( usercmd.buttons & BUTTON_RUN ) && !AI_AIMING && !AI_RELOAD && zoomFov.IsDone(gameLocal.time) && ( usercmd.forwardmove || usercmd.rightmove ) && ( usercmd.upmove >= 0 ) ) {
 		if ( !gameLocal.isMultiplayer && !physicsObj.IsCrouching() && !PowerUpActive( ADRENALINE ) ) {
 			stamina -= MS2SEC( gameLocal.msec );
 		}
@@ -5718,7 +5721,7 @@ void idPlayer::AdjustSpeed( void ) {
 		if ( stamina > pm_stamina.GetFloat() ) {
 			stamina = pm_stamina.GetFloat();
 		}
-		speed = pm_walkspeed.GetFloat();
+		speed = (AI_AIMING || !zoomFov.IsDone(gameLocal.time)) ? pm_crouchspeed.GetFloat() : pm_walkspeed.GetFloat();
 		bobFrac = 0.0f;
 	}
 
@@ -6251,6 +6254,8 @@ void idPlayer::Think( void ) {
 			zoomFov.Init( gameLocal.time, 200.0f, zoomFov.GetCurrentValue( gameLocal.time ), DefaultFov() );
 		}
 	}
+
+	AI_AIMING = (usercmd.buttons & BUTTON_ZOOM) && zoomFov.IsDone(gameLocal.time);
 
 	// if we have an active gui, we will unrotate the view angles as
 	// we turn the mouse movements into gui events

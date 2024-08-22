@@ -256,6 +256,7 @@ public:
 	idScriptBool			AI_TELEPORT;
 	idScriptBool			AI_TURN_LEFT;
 	idScriptBool			AI_TURN_RIGHT;
+	idScriptBool			AI_AIMING;
 
 	// inventory
 	idInventory				inventory;

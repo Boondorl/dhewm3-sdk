@@ -2888,6 +2888,13 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float inaccuracy, f
 	// [D3R] Inaccuracy is applied once before anything else
 	if (inaccuracy)
 	{
+		if (owner->AI_AIMING)
+			inaccuracy *= 0.5f;
+		if (owner->AI_CROUCH)
+			inaccuracy *= 0.75f;
+		if (owner->AI_RUN)
+			inaccuracy *= 1.5f;
+
 		gameLocal.GetUniformOffset(ofs, inaccuracy);
 		forward = forward + left * idMath::Tan(ofs.x) + up * idMath::Tan(ofs.y);
 		forward.Normalize();
