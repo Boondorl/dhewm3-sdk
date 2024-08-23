@@ -279,6 +279,7 @@ public:
 	bool					doingDeathSkin;
 	int						lastArmorPulse;		// lastDmgTime if we had armor at time of hit
 	float					stamina;
+	int						nextStaminaRegen;	// Next time to start regenning stamina
 	float					healthPool;			// amount of health to give over time
 	int						nextHealthPulse;
 	bool					healthPulse;

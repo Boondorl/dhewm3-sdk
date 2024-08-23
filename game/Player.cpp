@@ -985,6 +985,7 @@ idPlayer::idPlayer() {
 	deathClearContentsTime	= 0;
 	lastArmorPulse			= -10000;
 	stamina					= 0.0f;
+	nextStaminaRegen		= 0;
 	healthPool				= 0.0f;
 	nextHealthPulse			= 0;
 	healthPulse				= false;
@@ -1260,6 +1261,7 @@ void idPlayer::Init( void ) {
 
 	bobCycle		= 0;
 	stamina			= 0.0f;
+	nextStaminaRegen = 0;
 	healthPool		= 0.0f;
 	nextHealthPulse = 0;
 	healthPulse		= false;
@@ -1657,6 +1659,7 @@ void idPlayer::Save( idSaveGame *savefile ) const {
 	savefile->WriteBool( doingDeathSkin );
 	savefile->WriteInt( lastArmorPulse );
 	savefile->WriteFloat( stamina );
+	savefile->WriteInt(nextStaminaRegen);
 	savefile->WriteFloat( healthPool );
 	savefile->WriteInt( nextHealthPulse );
 	savefile->WriteBool( healthPulse );
@@ -1885,6 +1888,7 @@ void idPlayer::Restore( idRestoreGame *savefile ) {
 	savefile->ReadBool( doingDeathSkin );
 	savefile->ReadInt( lastArmorPulse );
 	savefile->ReadFloat( stamina );
+	savefile->ReadInt(nextStaminaRegen);
 	savefile->ReadFloat( healthPool );
 	savefile->ReadInt( nextHealthPulse );
 	savefile->ReadBool( healthPulse );
@@ -2735,8 +2739,16 @@ void idPlayer::UpdateConditions( void ) {
 		AI_STRAFE_RIGHT	= false;
 	}
 
-	AI_RUN			= (usercmd.buttons & BUTTON_RUN) && !AI_RELOAD && !AI_AIMING && zoomFov.IsDone(gameLocal.time) && ((!pm_stamina.GetFloat()) || (stamina > pm_staminathreshold.GetFloat()));
+	const bool running = AI_RUN;
+	AI_RUN			= (usercmd.buttons & BUTTON_RUN) && (usercmd.forwardmove || usercmd.rightmove)
+						&& !AI_RELOAD && !AI_AIMING && zoomFov.IsDone(gameLocal.time)
+						&& (!pm_stamina.GetFloat() || stamina > pm_staminathreshold.GetFloat())
+						&& !physicsObj.OnLadder() && !physicsObj.IsCrouching();
+
 	AI_DEAD			= ( health <= 0 );
+
+	if (running && !AI_RUN)
+		nextStaminaRegen = gameLocal.time + 2000;
 }
 
 /*
@@ -5694,8 +5706,8 @@ void idPlayer::AdjustSpeed( void ) {
 	} else if ( noclip ) {
 		speed = pm_noclipspeed.GetFloat();
 		bobFrac = 0.0f;
-	} else if ( !physicsObj.OnLadder() && ( usercmd.buttons & BUTTON_RUN ) && !AI_AIMING && !AI_RELOAD && zoomFov.IsDone(gameLocal.time) && ( usercmd.forwardmove || usercmd.rightmove ) && ( usercmd.upmove >= 0 ) ) {
-		if ( !gameLocal.isMultiplayer && !physicsObj.IsCrouching() && !PowerUpActive( ADRENALINE ) ) {
+	} else if (AI_RUN) {
+		if ( !gameLocal.isMultiplayer && !PowerUpActive( ADRENALINE ) ) {
 			stamina -= MS2SEC( gameLocal.msec );
 		}
 		if ( stamina < 0 ) {
@@ -5710,16 +5722,19 @@ void idPlayer::AdjustSpeed( void ) {
 		}
 		speed = pm_walkspeed.GetFloat() * ( 1.0f - bobFrac ) + pm_runspeed.GetFloat() * bobFrac;
 	} else {
-		rate = pm_staminarate.GetFloat();
+		if (gameLocal.time > nextStaminaRegen)
+		{
+			rate = pm_staminarate.GetFloat();
 
-		// increase 25% faster when not moving
-		if ( ( usercmd.forwardmove == 0 ) && ( usercmd.rightmove == 0 ) && ( !physicsObj.OnLadder() || ( usercmd.upmove == 0 ) ) ) {
-			 rate *= 1.25f;
-		}
+			// increase 25% faster when not moving
+			if ((usercmd.forwardmove == 0) && (usercmd.rightmove == 0) && (!physicsObj.OnLadder() || (usercmd.upmove == 0))) {
+				rate *= 1.25f;
+			}
 
-		stamina += rate * MS2SEC( gameLocal.msec );
-		if ( stamina > pm_stamina.GetFloat() ) {
-			stamina = pm_stamina.GetFloat();
+			stamina += rate * MS2SEC(gameLocal.msec);
+			if (stamina > pm_stamina.GetFloat()) {
+				stamina = pm_stamina.GetFloat();
+			}
 		}
 		speed = (AI_AIMING || !zoomFov.IsDone(gameLocal.time)) ? pm_crouchspeed.GetFloat() : pm_walkspeed.GetFloat();
 		bobFrac = 0.0f;
