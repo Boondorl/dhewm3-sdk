@@ -5726,11 +5726,6 @@ void idPlayer::AdjustSpeed( void ) {
 		{
 			rate = pm_staminarate.GetFloat();
 
-			// increase 25% faster when not moving
-			if ((usercmd.forwardmove == 0) && (usercmd.rightmove == 0) && (!physicsObj.OnLadder() || (usercmd.upmove == 0))) {
-				rate *= 1.25f;
-			}
-
 			stamina += rate * MS2SEC(gameLocal.msec);
 			if (stamina > pm_stamina.GetFloat()) {
 				stamina = pm_stamina.GetFloat();
