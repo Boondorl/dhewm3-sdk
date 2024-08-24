@@ -1164,6 +1164,8 @@ void idPlayer::LinkScriptVariables( void ) {
 	AI_TURN_LEFT.LinkTo(		scriptObject, "AI_TURN_LEFT" );
 	AI_TURN_RIGHT.LinkTo(		scriptObject, "AI_TURN_RIGHT" );
 	AI_AIMING.LinkTo(			scriptObject, "AI_AIMING" );
+	AI_AIMING_IN.LinkTo(		scriptObject, "AI_AIMING_IN");
+	AI_AIMING_OUT.LinkTo(		scriptObject, "AI_AIMING_OUT");
 }
 
 /*
@@ -1376,6 +1378,8 @@ void idPlayer::Init( void ) {
 	AI_TURN_LEFT	= false;
 	AI_TURN_RIGHT	= false;
 	AI_AIMING		= false;
+	AI_AIMING_IN	= false;
+	AI_AIMING_OUT	= false;
 
 	// reset the script object
 	ConstructScriptObject();
@@ -2684,6 +2688,8 @@ void idPlayer::EnterCinematic( void ) {
 	AI_TURN_LEFT	= false;
 	AI_TURN_RIGHT	= false;
 	AI_AIMING		= false;
+	AI_AIMING_IN	= false;
+	AI_AIMING_OUT	= false;
 }
 
 /*
@@ -2741,7 +2747,7 @@ void idPlayer::UpdateConditions( void ) {
 
 	const bool running = AI_RUN;
 	AI_RUN			= (usercmd.buttons & BUTTON_RUN) && (usercmd.forwardmove || usercmd.rightmove)
-						&& !AI_RELOAD && !AI_AIMING && zoomFov.IsDone(gameLocal.time)
+						&& !AI_RELOAD && !AI_AIMING && !AI_AIMING_IN
 						&& (!pm_stamina.GetFloat() || stamina > pm_staminathreshold.GetFloat())
 						&& !physicsObj.OnLadder() && !physicsObj.IsCrouching();
 
@@ -5731,7 +5737,7 @@ void idPlayer::AdjustSpeed( void ) {
 				stamina = pm_stamina.GetFloat();
 			}
 		}
-		speed = (AI_AIMING || !zoomFov.IsDone(gameLocal.time)) ? pm_crouchspeed.GetFloat() : pm_walkspeed.GetFloat();
+		speed = (AI_AIMING || AI_AIMING_IN) ? pm_crouchspeed.GetFloat() : pm_walkspeed.GetFloat();
 		bobFrac = 0.0f;
 	}
 
@@ -6258,14 +6264,31 @@ void idPlayer::Think( void ) {
 
 	// zooming
 	if ( ( usercmd.buttons ^ oldCmd.buttons ) & BUTTON_ZOOM ) {
+		float curFoV = 0.0f, destFoV = 0.0f;
+		float dur = 200.0f;
+		if (!zoomFov.IsDone(gameLocal.time))
+			dur = (gameLocal.time - zoomFov.GetStartTime()) + (dur - zoomFov.GetDuration());
+
 		if ( ( usercmd.buttons & BUTTON_ZOOM ) && weapon.GetEntity() ) {
-			zoomFov.Init( gameLocal.time, 200.0f, CalcFov( false ), weapon.GetEntity()->GetZoomFov() );
+			curFoV = CalcFov(false);
+			destFoV = weapon.GetEntity()->GetZoomFov();
 		} else {
-			zoomFov.Init( gameLocal.time, 200.0f, zoomFov.GetCurrentValue( gameLocal.time ), DefaultFov() );
+			curFoV = zoomFov.GetCurrentValue(gameLocal.time);
+			destFoV = DefaultFov();
 		}
+
+		zoomFov.Init(gameLocal.time, dur, curFoV, destFoV);
 	}
 
+	AI_AIMING_IN = AI_AIMING_OUT = false;
 	AI_AIMING = (usercmd.buttons & BUTTON_ZOOM) && zoomFov.IsDone(gameLocal.time);
+	if (!AI_AIMING)
+	{
+		if (usercmd.buttons & BUTTON_ZOOM)
+			AI_AIMING_IN = true;
+		else if (!zoomFov.IsDone(gameLocal.time))
+			AI_AIMING_OUT = true;
+	}
 
 	// if we have an active gui, we will unrotate the view angles as
 	// we turn the mouse movements into gui events
@@ -6973,6 +6996,22 @@ float idPlayer::CalcFov( bool honorZoom ) {
 	}
 
 	return fov;
+}
+
+/*
+====================
+idPlayer::GetZoomFraction
+
+Used for quickly getting how far into the zoom animation the player
+currently is
+====================
+*/
+float idPlayer::GetZoomFraction( void ) const {
+	if (zoomFov.IsDone(gameLocal.time))
+		return 1.0f;
+
+	const float start = zoomFov.GetStartTime();
+	return (gameLocal.time - start) / (zoomFov.GetEndTime() - start);
 }
 
 /*

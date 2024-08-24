@@ -1929,11 +1929,6 @@ void idBFGProjectile::Launch( const idVec3 &start, const idVec3 &dir, const idVe
 			continue;
 		}
 
-		if ( ent->IsType( idPlayer::Type ) ) {
-			idPlayer *player = static_cast<idPlayer*>( ent );
-			player->playerView.EnableBFGVision( true );
-		}
-
 		beamTarget_t bt;
 		memset( &bt.renderEntity, 0, sizeof( renderEntity_t ) );
 		bt.renderEntity.origin = GetPhysics()->GetOrigin();

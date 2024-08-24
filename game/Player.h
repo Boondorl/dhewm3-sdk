@@ -257,6 +257,8 @@ public:
 	idScriptBool			AI_TURN_LEFT;
 	idScriptBool			AI_TURN_RIGHT;
 	idScriptBool			AI_AIMING;
+	idScriptBool			AI_AIMING_IN;
+	idScriptBool			AI_AIMING_OUT;
 
 	// inventory
 	idInventory				inventory;
@@ -402,6 +404,7 @@ public:
 
 	float					DefaultFov( void ) const;
 	float					CalcFov( bool honorZoom );
+	float					GetZoomFraction( void ) const;
 	void					CalculateViewWeaponPos( idVec3 &origin, idMat3 &axis );
 	idVec3					GetEyePosition( void ) const;
 	void					GetViewPos( idVec3 &origin, idMat3 &axis ) const;

@@ -2890,6 +2890,9 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float inaccuracy, f
 	{
 		if (owner->AI_AIMING)
 			inaccuracy *= 0.5f;
+		else if (owner->AI_AIMING_IN)
+			inaccuracy *= 1.0f - 0.25f * owner->GetZoomFraction(); // [D3R] Limit how accurate aiming in is
+
 		if (owner->AI_CROUCH)
 			inaccuracy *= 0.75f;
 		if (owner->AI_RUN)
