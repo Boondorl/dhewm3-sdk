@@ -2830,8 +2830,12 @@ void idPlayer::FireWeapon( void ) {
 			// Check to make sure the Soul Cube could find something within range to kill first
 			if (weapon_soulcube >= 0 && currentWeapon == weapon_soulcube && !soulCubeTarget.GetEntity()) {
 				trace_t tr;
-				idVec3 start = GetEyePosition();
-				idVec3 end = start + viewAxis[0] * 512.0f;
+				idVec3 start;
+				idMat3 axis;
+
+				GetViewPos(start, axis);
+				idVec3 end = start + axis[0] * 512.0f;
+				
 				gameLocal.clip.TracePoint(tr, start, end, MASK_SHOT_RENDERMODEL | CONTENTS_BODY, this);
 				if (tr.fraction < 1.0f) {
 					soulCubeTarget = gameLocal.GetTraceEntity(tr);

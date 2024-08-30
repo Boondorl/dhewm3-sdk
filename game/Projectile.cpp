@@ -1420,8 +1420,12 @@ void idGuidedProjectile::Launch( const idVec3 &start, const idVec3 &dir, const i
 				player->soulCubeTarget = NULL;
 			} else {
 				trace_t tr;
-				idVec3 start = player->GetEyePosition();
-				idVec3 end = start + player->viewAxis[0] * 1000.0f;
+				idVec3 start;
+				idMat3 axis;
+
+				idPlayer* player = static_cast<idPlayer*>(owner.GetEntity());
+				player->GetViewPos(start, axis);
+				idVec3 end = start + axis[0] * 1000.0f;
 				gameLocal.clip.TracePoint(tr, start, end, MASK_SHOT_RENDERMODEL | CONTENTS_BODY, owner.GetEntity());
 				if (tr.fraction < 1.0f) {
 					enemy = gameLocal.GetTraceEntity(tr);
