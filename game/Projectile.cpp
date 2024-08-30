@@ -310,6 +310,8 @@ void idProjectile::Launch( const idVec3 &start, const idVec3 &dir, const idVec3 
 	spawnArgs.GetVector( "velocity", "0 0 0", velocity );
 
 	speed = velocity.Length() * launchPower;
+	if (g_skill.GetInteger() == 0 && owner.GetEntity() && !owner.GetEntity()->IsType(idPlayer::Type))
+		speed *= 0.8f;
 
 	damagePower = dmgPower;
 

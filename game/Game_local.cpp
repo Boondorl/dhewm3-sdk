@@ -3171,13 +3171,6 @@ bool idGameLocal::InhibitEntitySpawn( idDict &spawnArgs ) {
 	}
 
 	const char *name;
-	if ( g_skill.GetInteger() == 3 ) {
-		name = spawnArgs.GetString( "classname" );
-		if ( idStr::Icmp( name, "item_medkit" ) == 0 || idStr::Icmp( name, "item_medkit_small" ) == 0 ) {
-			result = true;
-		}
-	}
-
 	if ( gameLocal.isMultiplayer ) {
 		name = spawnArgs.GetString( "classname" );
 		if ( idStr::Icmp( name, "weapon_bfg" ) == 0 || idStr::Icmp( name, "weapon_soulcube" ) == 0 ) {

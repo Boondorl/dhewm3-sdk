@@ -2888,10 +2888,15 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float inaccuracy, f
 	// [D3R] Inaccuracy is applied once before anything else
 	if (inaccuracy)
 	{
-		if (owner->AI_AIMING)
+		if (owner->AI_AIMING) {
 			inaccuracy *= 0.5f;
-		else if (owner->AI_AIMING_IN)
-			inaccuracy *= 1.0f - 0.25f * owner->GetZoomFraction(); // [D3R] Limit how accurate aiming in is
+		} else {
+			// Way less accuracy on Nightmare
+			if (g_skill.GetInteger() == 3)
+				inaccuracy *= 2.0f;
+			if (owner->AI_AIMING_IN)
+				inaccuracy *= 1.0f - 0.25f * owner->GetZoomFraction(); // [D3R] Limit how accurate aiming in is
+		}
 
 		if (owner->AI_CROUCH)
 			inaccuracy *= 0.75f;

@@ -1468,6 +1468,9 @@ bool idAI::PredictTrajectory( const idVec3 &firePos, const idVec3 &target, float
 		return true;
 	}
 
+	if (g_skill.GetInteger() == 0)
+		projectileSpeed *= 0.8f;
+
 	// if no velocity or the projectile is not affected by gravity
 	if ( projectileSpeed <= 0.0f || projGravity == vec3_origin ) {
 

@@ -749,7 +749,7 @@ bool idInventory::Give( idPlayer *owner, const idDict &spawnArgs, const char *st
 		if ( ammo[ i ] >= max ) {
 			return false;
 		}
-		amount = atoi( value );
+		amount = ModifyAmount(value, 1.5f, 0.7f);
 		if ( amount ) {
 			ammo[ i ] += amount;
 			if ( ( max > 0 ) && ( ammo[ i ] > max ) ) {
@@ -766,7 +766,7 @@ bool idInventory::Give( idPlayer *owner, const idDict &spawnArgs, const char *st
 		if ( armor >= maxarmor ) {
 			return false;	// can't hold any more, so leave the item
 		}
-		amount = atoi( value );
+		amount = ModifyAmount(value, 1.5f, 0.5f);
 		if ( amount ) {
 			armor += amount;
 			if ( armor > maxarmor ) {
@@ -847,6 +847,23 @@ bool idInventory::Give( idPlayer *owner, const idDict &spawnArgs, const char *st
 	}
 
 	return true;
+}
+
+int idInventory::ModifyAmount(const char* baseAmount, float easyMod, float nightmareMod) {
+	const int skill = g_skill.GetInteger();
+
+	int realAmount = atoi(baseAmount);
+	if (realAmount <= 0 || (skill > 0 && skill < 3))
+		return realAmount;
+
+	float mod;
+	if (skill == 0) {
+		mod = easyMod;
+	} else {
+		mod = nightmareMod;
+	}
+
+	return mod > 0.0f ? (int)ceil(realAmount * mod) : realAmount;
 }
 
 /*
@@ -1590,9 +1607,6 @@ void idPlayer::Spawn( void ) {
 			if ( health < 25 ) {
 				health = 25;
 			}
-		} else if (g_skill.GetInteger() == 3) {
-			healthTake = true;
-			nextHealthTake = gameLocal.time + g_healthTakeTime.GetInteger() * 1000;
 		}
 	}
 }
@@ -2904,7 +2918,7 @@ bool idPlayer::Give( const char *statname, const char *value ) {
 		if ( health >= inventory.maxHealth ) {
 			return false;
 		}
-		amount = atoi( value );
+		amount = idInventory::ModifyAmount(value, 1.5f, 0.5f);
 		if ( amount ) {
 			health += amount;
 			if ( health > inventory.maxHealth ) {
@@ -3216,16 +3230,6 @@ void idPlayer::UpdatePowerUps( void ) {
 		}
 		nextHealthPulse = gameLocal.time + HEALTHPULSE_TIME;
 		healthPulse = true;
-	}
-
-	if ( !gameLocal.inCinematic && influenceActive == 0 && g_skill.GetInteger() == 3 && gameLocal.time > nextHealthTake && !AI_DEAD && health > g_healthTakeLimit.GetInteger() ) {
-		assert( !gameLocal.isClient );	// healthPool never be set on client
-		health -= g_healthTakeAmt.GetInteger();
-		if ( health < g_healthTakeLimit.GetInteger() ) {
-			health = g_healthTakeLimit.GetInteger();
-		}
-		nextHealthTake = gameLocal.time + g_healthTakeTime.GetInteger() * 1000;
-		healthTake = true;
 	}
 }
 

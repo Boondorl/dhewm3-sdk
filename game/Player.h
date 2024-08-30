@@ -169,6 +169,8 @@ public:
 	void					Save( idSaveGame *savefile ) const;					// archives object for save game file
 	void					Restore( idRestoreGame *savefile );					// unarchives object from save game file
 
+	static int				ModifyAmount(const char* baseAmount, float easyMod, float nightmareMod);
+
 	void					Clear( void );
 	void					GivePowerUp( idPlayer *player, int powerup, int msec );
 	void					ClearPowerUps( void );
