@@ -1672,6 +1672,7 @@ void idPlayer::Save( idSaveGame *savefile ) const {
 
 	savefile->WriteBool( hiddenWeapon );
 	soulCubeProjectile.Save( savefile );
+	soulCubeTarget.Save( savefile );
 
 	savefile->WriteInt( spectator );
 	savefile->WriteVec3( colorBar );
@@ -1901,6 +1902,7 @@ void idPlayer::Restore( idRestoreGame *savefile ) {
 
 	savefile->ReadBool( hiddenWeapon );
 	soulCubeProjectile.Restore( savefile );
+	soulCubeTarget.Restore( savefile );
 
 	savefile->ReadInt( spectator );
 	savefile->ReadVec3( colorBar );
@@ -2811,6 +2813,26 @@ void idPlayer::FireWeapon( void ) {
 
 	if ( !hiddenWeapon && weapon.GetEntity()->IsReady() ) {
 		if ( weapon.GetEntity()->AmmoInClip() || weapon.GetEntity()->AmmoAvailable() ) {
+			// Check to make sure the Soul Cube could find something within range to kill first
+			if (weapon_soulcube >= 0 && currentWeapon == weapon_soulcube && !soulCubeTarget.GetEntity()) {
+				trace_t tr;
+				idVec3 start = GetEyePosition();
+				idVec3 end = start + viewAxis[0] * 512.0f;
+				gameLocal.clip.TracePoint(tr, start, end, MASK_SHOT_RENDERMODEL | CONTENTS_BODY, this);
+				if (tr.fraction < 1.0f) {
+					soulCubeTarget = gameLocal.GetTraceEntity(tr);
+				}
+				// ignore actors on the player's team
+				if (soulCubeTarget.GetEntity() == NULL || !soulCubeTarget.GetEntity()->IsType(idActor::Type) || (static_cast<idActor*>(soulCubeTarget.GetEntity())->team == team)) {
+					soulCubeTarget = NULL;
+				}
+
+				// Couldn't find a valid target, so don't fire it at all
+				if (!soulCubeTarget.GetEntity()) {
+					return;
+				}
+			}
+
 			AI_ATTACK_HELD = true;
 			weapon.GetEntity()->BeginAttack();
 			if ( ( weapon_soulcube >= 0 ) && ( currentWeapon == weapon_soulcube ) ) {
@@ -2820,7 +2842,11 @@ void idPlayer::FireWeapon( void ) {
 				SelectWeapon( previousWeapon, false );
 			}
 		} else {
-			NextBestWeapon();
+			if (weapon_soulcube >= 0 && currentWeapon == weapon_soulcube) {
+				SelectWeapon( previousWeapon, false );
+			} else {
+				NextBestWeapon();
+			}
 		}
 	}
 
@@ -7408,7 +7434,7 @@ void idPlayer::CalculateRenderView( void ) {
 idPlayer::AddAIKill
 =============
 */
-void idPlayer::AddAIKill( void ) {
+void idPlayer::AddAIKill( idAI *killed ) {
 	int max_souls;
 	int ammo_souls;
 
@@ -7421,8 +7447,13 @@ void idPlayer::AddAIKill( void ) {
 	ammo_souls = idWeapon::GetAmmoNumForName( "ammo_souls" );
 	max_souls = inventory.MaxAmmoForAmmoClass( this, "ammo_souls" );
 	if ( inventory.ammo[ ammo_souls ] < max_souls ) {
-		inventory.ammo[ ammo_souls ]++;
+		int amount = killed->GetSoulAmount();
+		if (amount <= 0)
+			amount = 1;
+
+		inventory.ammo[ ammo_souls ] += amount;
 		if ( inventory.ammo[ ammo_souls ] >= max_souls ) {
+			inventory.ammo[ammo_souls] = max_souls;
 			hud->HandleNamedEvent( "soulCubeReady" );
 			StartSound( "snd_soulcube_ready", SND_CHANNEL_ANY, 0, false, NULL );
 		}

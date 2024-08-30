@@ -430,6 +430,8 @@ idActor::idActor( void ) {
 	pain_debounce_time	= 0;
 	pain_delay			= 0;
 	pain_threshold		= 0;
+	soulAmmo			= 0;
+	soulHeal			= 0;
 
 	state				= NULL;
 	idealState			= NULL;
@@ -513,6 +515,9 @@ void idActor::Spawn( void ) {
 	spawnArgs.GetVector( "offsetModel", "0 0 0", modelOffset );
 
 	spawnArgs.GetBool( "use_combat_bbox", "0", use_combat_bbox );
+
+	spawnArgs.GetInt("soul_ammo", "0", soulAmmo);
+	spawnArgs.GetInt("soul_heal", "0", soulHeal);
 
 	viewAxis = GetPhysics()->GetAxis();
 
@@ -786,6 +791,9 @@ void idActor::Save( idSaveGame *savefile ) const {
 	savefile->WriteInt( pain_delay );
 	savefile->WriteInt( pain_threshold );
 
+	savefile->WriteInt(soulAmmo);
+	savefile->WriteInt(soulHeal);
+
 	savefile->WriteInt( damageGroups.Num() );
 	for( i = 0; i < damageGroups.Num(); i++ ) {
 		savefile->WriteString( damageGroups[ i ] );
@@ -903,6 +911,9 @@ void idActor::Restore( idRestoreGame *savefile ) {
 	savefile->ReadInt( pain_debounce_time );
 	savefile->ReadInt( pain_delay );
 	savefile->ReadInt( pain_threshold );
+
+	savefile->ReadInt(soulAmmo);
+	savefile->ReadInt(soulHeal);
 
 	savefile->ReadInt( num );
 	damageGroups.SetGranularity( 1 );
@@ -1359,6 +1370,14 @@ void idActor::UpdateScript( void ) {
 	if ( i == 20 ) {
 		scriptThread->Warning( "idActor::UpdateScript: exited loop to prevent lockup" );
 	}
+}
+
+int idActor::GetSoulHeal( void ) const {
+	return soulHeal;
+}
+
+int idActor::GetSoulAmount( void ) const {
+	return soulAmmo;
 }
 
 /***********************************************************************

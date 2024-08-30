@@ -291,6 +291,7 @@ public:
 
 	bool					hiddenWeapon;		// if the weapon is hidden ( in noWeapons maps )
 	idEntityPtr<idProjectile> soulCubeProjectile;
+	idEntityPtr<idEntity> soulCubeTarget;
 
 	// mp stuff
 	static idVec3			colorBarTable[ 5 ];
@@ -451,7 +452,7 @@ public:
 	void					RemoveWeapon( const char *weap );
 	bool					CanShowWeaponViewmodel( void ) const;
 
-	void					AddAIKill( void );
+	void					AddAIKill( idAI *killed );
 	void					SetSoulCubeProjectile( idProjectile *projectile );
 
 	void					AdjustHeartRate( int target, float timeInSecs, float delay, bool force );

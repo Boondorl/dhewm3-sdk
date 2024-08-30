@@ -1412,17 +1412,22 @@ void idGuidedProjectile::Launch( const idVec3 &start, const idVec3 &dir, const i
 		if ( owner.GetEntity()->IsType( idAI::Type ) ) {
 			enemy = static_cast<idAI *>( owner.GetEntity() )->GetEnemy();
 		} else if ( owner.GetEntity()->IsType( idPlayer::Type ) ) {
-			trace_t tr;
 			idPlayer *player = static_cast<idPlayer*>( owner.GetEntity() );
-			idVec3 start = player->GetEyePosition();
-			idVec3 end = start + player->viewAxis[0] * 1000.0f;
-			gameLocal.clip.TracePoint( tr, start, end, MASK_SHOT_RENDERMODEL | CONTENTS_BODY, owner.GetEntity() );
-			if ( tr.fraction < 1.0f ) {
-				enemy = gameLocal.GetTraceEntity( tr );
-			}
-			// ignore actors on the player's team
-			if ( enemy.GetEntity() == NULL || !enemy.GetEntity()->IsType( idActor::Type ) || ( static_cast<idActor *>( enemy.GetEntity() )->team == player->team ) ) {
-				enemy = player->EnemyWithMostHealth();
+			if (IsType(idSoulCubeMissile::Type) && player->soulCubeTarget.GetEntity()) {
+				enemy = player->soulCubeTarget.GetEntity();
+				player->soulCubeTarget = NULL;
+			} else {
+				trace_t tr;
+				idVec3 start = player->GetEyePosition();
+				idVec3 end = start + player->viewAxis[0] * 1000.0f;
+				gameLocal.clip.TracePoint(tr, start, end, MASK_SHOT_RENDERMODEL | CONTENTS_BODY, owner.GetEntity());
+				if (tr.fraction < 1.0f) {
+					enemy = gameLocal.GetTraceEntity(tr);
+				}
+				// ignore actors on the player's team
+				if (enemy.GetEntity() == NULL || !enemy.GetEntity()->IsType(idActor::Type) || (static_cast<idActor*>(enemy.GetEntity())->team == player->team)) {
+					enemy = player->EnemyWithMostHealth();
+				}
 			}
 		}
 	}
@@ -1537,7 +1542,11 @@ void idSoulCubeMissile::KillTarget( const idVec3 &dir ) {
 		}
 		ownerEnt = owner.GetEntity();
 		if ( ( act->health > 0 ) && ownerEnt && ownerEnt->IsType( idPlayer::Type ) && ( ownerEnt->health > 0 ) && !act->spawnArgs.GetBool( "boss" ) ) {
-			static_cast<idPlayer *>( ownerEnt )->GiveHealthPool( act->health );
+			int heal = act->GetSoulHeal();
+			if (heal <= 0)
+				heal = act->health;
+
+			static_cast<idPlayer *>( ownerEnt )->GiveHealthPool( heal );
 		}
 		act->Damage( this, owner.GetEntity(), dir,  spawnArgs.GetString( "def_damage" ), 1.0f, INVALID_JOINT );
 		act->GetAFPhysics()->SetTimeScale( 0.25 );

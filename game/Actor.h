@@ -163,6 +163,9 @@ public:
 	bool					PointVisible( const idVec3 &point ) const;
 	virtual void			GetAIAimTargets( const idVec3 &lastSightPos, idVec3 &headPos, idVec3 &chestPos );
 
+	int						GetSoulHeal( void ) const;
+	int						GetSoulAmount( void ) const;
+
 							// damage
 	void					SetupDamageGroups( void );
 	virtual	void			Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &dir, const char *damageDefName, const float damageScale, const int location );
@@ -224,6 +227,8 @@ protected:
 
 	idStrList				damageGroups;		// body damage groups
 	idList<float>			damageScale;		// damage scale per damage gruop
+	int						soulAmmo;			// How many souls it gives on death
+	int						soulHeal;			// How much to heal on death from soul cube
 
 	bool						use_combat_bbox;	// whether to use the bounding box for combat collision
 	idEntityPtr<idAFAttachment>	head;
