@@ -296,6 +296,7 @@ idAI::idAI() {
 	blockedAttackTime	= 750;
 	turnRate			= 360.0f;
 	turnVel				= 0.0f;
+	fastChase			= false;
 	anim_turn_yaw		= 0.0f;
 	anim_turn_amount	= 0.0f;
 	anim_turn_angles	= 0.0f;
@@ -417,6 +418,8 @@ void idAI::Save( idSaveGame *savefile ) const {
 	savefile->WriteFloat( blockedRadius );
 	savefile->WriteInt( blockedMoveTime );
 	savefile->WriteInt( blockedAttackTime );
+
+	savefile->WriteBool(fastChase);
 
 	savefile->WriteFloat( ideal_yaw );
 	savefile->WriteFloat( current_yaw );
@@ -552,6 +555,8 @@ void idAI::Restore( idRestoreGame *savefile ) {
 	savefile->ReadFloat( blockedRadius );
 	savefile->ReadInt( blockedMoveTime );
 	savefile->ReadInt( blockedAttackTime );
+
+	savefile->ReadBool(fastChase);
 
 	savefile->ReadFloat( ideal_yaw );
 	savefile->ReadFloat( current_yaw );
@@ -713,6 +718,8 @@ void idAI::Spawn( void ) {
 	jointHandle_t		joint;
 	idVec3				local_dir;
 	bool				talks;
+	bool				nightmareRes;
+	bool				isBoss;
 
 	if ( !g_monsters.GetBool() ) {
 		PostEventMS( &EV_Remove, 0 );
@@ -731,6 +738,11 @@ void idAI::Spawn( void ) {
 	spawnArgs.GetFloat( "fly_roll_max",			"60",		fly_roll_max );
 	spawnArgs.GetFloat( "fly_pitch_scale",		"45",		fly_pitch_scale );
 	spawnArgs.GetFloat( "fly_pitch_max",		"30",		fly_pitch_max );
+
+	spawnArgs.GetBool("nightmare_fast", "0", fastChase);
+
+	spawnArgs.GetBool("nightmare_res", "0", nightmareRes);
+	strongPointScalar = nightmareRes && g_skill.GetInteger() == 3 ? 2.0f / 3.0f : 1.0f;
 
 	spawnArgs.GetFloat( "melee_range",			"64",		melee_range );
 	spawnArgs.GetFloat( "projectile_height_to_distance_ratio",	"1", projectile_height_to_distance_ratio );
@@ -918,6 +930,15 @@ void idAI::Spawn( void ) {
 	if ( health <= 0 ) {
 		gameLocal.Warning( "entity '%s' doesn't have health set", name.c_str() );
 		health = 1;
+	}
+
+	spawnArgs.GetBool("is_boss", "0", isBoss);
+	if (isBoss) {
+		if (g_skill.GetInteger() == 0) {
+			health = (int)ceil(health * 0.8f);
+		} else if (g_skill.GetInteger() == 3) {
+			health = (int)ceil(health * 1.25f);
+		}
 	}
 
 	// set up monster chatter
@@ -3149,6 +3170,10 @@ void idAI::StaticMove( void ) {
 		gameRenderWorld->DebugLine( colorBlue, org, move.moveDest, gameLocal.msec, true );
 		gameRenderWorld->DebugLine( colorYellow, org + EyeOffset(), org + EyeOffset() + viewAxis[ 0 ] * physicsObj.GetGravityAxis() * 16.0f, gameLocal.msec, true );
 	}
+}
+
+bool idAI::IsFast( void ) const {
+	return fastChase && g_skill.GetInteger() >= 2;
 }
 
 /***********************************************************************

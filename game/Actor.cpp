@@ -432,6 +432,7 @@ idActor::idActor( void ) {
 	pain_threshold		= 0;
 	soulAmmo			= 0;
 	soulHeal			= 0;
+	strongPointScalar	= 0.0f;
 
 	state				= NULL;
 	idealState			= NULL;
@@ -518,6 +519,7 @@ void idActor::Spawn( void ) {
 
 	spawnArgs.GetInt("soul_ammo", "0", soulAmmo);
 	spawnArgs.GetInt("soul_heal", "0", soulHeal);
+	strongPointScalar = 1.0f;
 
 	viewAxis = GetPhysics()->GetAxis();
 
@@ -790,6 +792,7 @@ void idActor::Save( idSaveGame *savefile ) const {
 	savefile->WriteInt( pain_debounce_time );
 	savefile->WriteInt( pain_delay );
 	savefile->WriteInt( pain_threshold );
+	savefile->WriteFloat(strongPointScalar);
 
 	savefile->WriteInt(soulAmmo);
 	savefile->WriteInt(soulHeal);
@@ -911,6 +914,7 @@ void idActor::Restore( idRestoreGame *savefile ) {
 	savefile->ReadInt( pain_debounce_time );
 	savefile->ReadInt( pain_delay );
 	savefile->ReadInt( pain_threshold );
+	savefile->ReadFloat(strongPointScalar);
 
 	savefile->ReadInt(soulAmmo);
 	savefile->ReadInt(soulHeal);
@@ -2387,11 +2391,19 @@ idActor::GetDamageForLocation
 =====================
 */
 int idActor::GetDamageForLocation( int damage, int location ) {
+	int modDmg = damage;
 	if ( ( location < 0 ) || ( location >= damageScale.Num() ) ) {
-		return damage;
+		if (strongPointScalar >= 0.0f && strongPointScalar != 1.0f) {
+			modDmg = (int)ceil(modDmg * strongPointScalar);
+		}
+		return modDmg;
 	}
 
-	return (int)ceil( damage * damageScale[ location ] );
+	modDmg = (int)ceil(damage * damageScale[location]);
+	if (strongPointScalar >= 0.0f && strongPointScalar != 1.0f && damageScale[location] <= 1.0f) {
+		modDmg = (int)ceil(modDmg * strongPointScalar);
+	}
+	return modDmg;
 }
 
 /*
@@ -2594,6 +2606,7 @@ void idActor::Event_PlayAnim( int channel, const char *animname ) {
 	animFlags_t	flags;
 	idEntity *headEnt;
 	int	anim;
+	//float rate;
 
 	anim = GetAnim( channel, animname );
 	if ( !anim ) {
@@ -2605,6 +2618,14 @@ void idActor::Event_PlayAnim( int channel, const char *animname ) {
 		idThread::ReturnInt( 0 );
 		return;
 	}
+
+	/*if (animname == "sight" || animname == "teleport") {
+
+	} else if (animname == "walk" || animname == "run") {
+
+	} else {
+		rate = 1.0f;
+	}*/
 
 	switch( channel ) {
 	case ANIMCHANNEL_HEAD :

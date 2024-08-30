@@ -227,6 +227,7 @@ protected:
 
 	idStrList				damageGroups;		// body damage groups
 	idList<float>			damageScale;		// damage scale per damage gruop
+	float					strongPointScalar;	// When playing on nightmare, scale non weakpoint damage if necessary
 	int						soulAmmo;			// How many souls it gives on death
 	int						soulHeal;			// How much to heal on death from soul cube
 
