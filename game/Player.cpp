@@ -6669,7 +6669,7 @@ void idPlayer::CalcDamagePoints( idEntity *inflictor, idEntity *attacker, const 
 	int		armorSave;
 
 	damageDef->GetInt( "damage", "20", damage );
-	damage = GetDamageForLocation( damage, location );
+	damage = GetDamageForLocation( damage, location, damageDef->GetBool("apply_nightmare_res", "0"));
 
 	idPlayer *player = attacker->IsType( idPlayer::Type ) ? static_cast<idPlayer*>(attacker) : NULL;
 	// [D3R] All difficulties now have the same damage. Balance is handled elsewhere

@@ -2203,7 +2203,7 @@ void idActor::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &dir
 	}
 
 	int	damage = damageDef->GetInt( "damage" ) * damageScale;
-	damage = GetDamageForLocation( damage, location );
+	damage = GetDamageForLocation( damage, location, damageDef->GetBool("apply_nightmare_res", "0"));
 
 	// inform the attacker that they hit someone
 	attacker->DamageFeedback( this, inflictor, damage );
@@ -2390,17 +2390,17 @@ void idActor::SetupDamageGroups( void ) {
 idActor::GetDamageForLocation
 =====================
 */
-int idActor::GetDamageForLocation( int damage, int location ) {
+int idActor::GetDamageForLocation( int damage, int location, bool nightmareArmor ) {
 	int modDmg = damage;
 	if ( ( location < 0 ) || ( location >= damageScale.Num() ) ) {
-		if (strongPointScalar >= 0.0f && strongPointScalar != 1.0f) {
+		if (nightmareArmor && strongPointScalar >= 0.0f && strongPointScalar != 1.0f) {
 			modDmg = (int)ceil(modDmg * strongPointScalar);
 		}
 		return modDmg;
 	}
 
 	modDmg = (int)ceil(damage * damageScale[location]);
-	if (strongPointScalar >= 0.0f && strongPointScalar != 1.0f && damageScale[location] <= 1.0f) {
+	if (nightmareArmor && strongPointScalar >= 0.0f && strongPointScalar != 1.0f && damageScale[location] <= 1.0f) {
 		modDmg = (int)ceil(modDmg * strongPointScalar);
 	}
 	return modDmg;
