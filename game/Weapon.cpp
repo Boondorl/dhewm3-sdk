@@ -3066,7 +3066,7 @@ void idWeapon::Event_Melee( void ) {
 				idVec3 kickDir, globalKickDir;
 				meleeDef->dict.GetVector( "kickDir", "0 0 0", kickDir );
 				globalKickDir = muzzleAxis * kickDir;
-				ent->Damage( owner, owner, globalKickDir, meleeDefName, owner->PowerUpModifier( MELEE_DAMAGE ), tr.c.id );
+				ent->Damage( owner, owner, globalKickDir, meleeDefName, owner->PowerUpModifier( MELEE_DAMAGE ), CLIPMODEL_ID_TO_JOINT_HANDLE(tr.c.id) );
 				hit = true;
 			}
 
