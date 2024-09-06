@@ -6314,7 +6314,8 @@ void idPlayer::Think( void ) {
 		zoomFov.Init(gameLocal.time, dur, curFoV, destFoV);
 	}
 
-	AI_AIMING_IN = AI_AIMING_OUT = false;
+	AI_AIMING_IN = false;
+	AI_AIMING_OUT = false;
 	AI_AIMING = (usercmd.buttons & BUTTON_ZOOM) && zoomFov.IsDone(gameLocal.time);
 	if (!AI_AIMING)
 	{
@@ -7044,8 +7045,7 @@ float idPlayer::GetZoomFraction( void ) const {
 	if (zoomFov.IsDone(gameLocal.time))
 		return 1.0f;
 
-	const float start = zoomFov.GetStartTime();
-	return (gameLocal.time - start) / (zoomFov.GetEndTime() - start);
+	return (gameLocal.time - zoomFov.GetStartTime() + (200.0f - zoomFov.GetDuration())) / 200.0f;
 }
 
 /*

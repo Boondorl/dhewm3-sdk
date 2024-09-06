@@ -1893,6 +1893,12 @@ void idWeapon::PresentWeapon( bool showViewModel ) {
 		}
 	}
 	viewWeaponOrigin += hideOffset * viewWeaponAxis[ 2 ];
+	if (owner->AI_AIMING)
+		viewWeaponOrigin += viewWeaponAxis[2];
+	else if (owner->AI_AIMING_IN)
+		viewWeaponOrigin += owner->GetZoomFraction() * viewWeaponAxis[2];
+	else if (owner->AI_AIMING_OUT)
+		viewWeaponOrigin += (1.0f - owner->GetZoomFraction()) * viewWeaponAxis[2];
 
 	// kick up based on repeat firing
 	MuzzleRise( viewWeaponOrigin, viewWeaponAxis );
