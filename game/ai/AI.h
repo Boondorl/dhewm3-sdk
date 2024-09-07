@@ -302,6 +302,7 @@ protected:
 
 	// difficulty options
 	bool					fastChase;
+	bool					leadShots;
 
 	// physics
 	idPhysics_Monster		physicsObj;

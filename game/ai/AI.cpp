@@ -297,6 +297,7 @@ idAI::idAI() {
 	turnRate			= 360.0f;
 	turnVel				= 0.0f;
 	fastChase			= false;
+	leadShots			= false;
 	anim_turn_yaw		= 0.0f;
 	anim_turn_amount	= 0.0f;
 	anim_turn_angles	= 0.0f;
@@ -420,6 +421,7 @@ void idAI::Save( idSaveGame *savefile ) const {
 	savefile->WriteInt( blockedAttackTime );
 
 	savefile->WriteBool(fastChase);
+	savefile->WriteBool(leadShots);
 
 	savefile->WriteFloat( ideal_yaw );
 	savefile->WriteFloat( current_yaw );
@@ -557,6 +559,7 @@ void idAI::Restore( idRestoreGame *savefile ) {
 	savefile->ReadInt( blockedAttackTime );
 
 	savefile->ReadBool(fastChase);
+	savefile->ReadBool(leadShots);
 
 	savefile->ReadFloat( ideal_yaw );
 	savefile->ReadFloat( current_yaw );
@@ -740,6 +743,7 @@ void idAI::Spawn( void ) {
 	spawnArgs.GetFloat( "fly_pitch_max",		"30",		fly_pitch_max );
 
 	spawnArgs.GetBool("nightmare_fast", "0", fastChase);
+	spawnArgs.GetBool("can_lead_attacks", "0", leadShots);
 
 	spawnArgs.GetBool("nightmare_res", "0", nightmareRes);
 	strongPointScalar = nightmareRes && g_skill.GetInteger() == 3 ? 2.0f / 3.0f : 1.0f;
@@ -4022,7 +4026,21 @@ bool idAI::GetAimDir( const idVec3 &firePos, idEntity *aimAtEnt, const idEntity 
 
 	// try aiming for chest
 	delta = firePos - targetPos1;
-	max_height = delta.LengthFast() * projectile_height_to_distance_ratio;
+	const float dist = delta.LengthFast();
+	max_height = dist * projectile_height_to_distance_ratio;
+	// If on hard, try and lead the shot a little against a monster's enemy.
+	if (leadShots && projectileSpeed > 0.0f && aimAtEnt && aimAtEnt == enemy.GetEntity() && g_skill.GetInteger() >= 2 && dist < 256.0f) {
+		idVec3 targetVel = aimAtEnt->GetPhysics()->GetLinearVelocity();
+		targetVel.z *= 0.2f;
+		targetVel *= (dist / projectileSpeed);
+
+		idVec3 leadPos = targetPos1 + targetVel * (1.0f - dist / 256.0f);
+		result = PredictTrajectory(firePos, leadPos, projectileSpeed, projectileGravity, projectileClipModel, MASK_SHOT_RENDERMODEL, max_height, ignore, aimAtEnt, ai_debugTrajectory.GetBool() ? 1000 : 0, aimDir );
+		if (result) {
+			return result;
+		}
+	}
+
 	result = PredictTrajectory( firePos, targetPos1, projectileSpeed, projectileGravity, projectileClipModel, MASK_SHOT_RENDERMODEL, max_height, ignore, aimAtEnt, ai_debugTrajectory.GetBool() ? 1000 : 0, aimDir );
 	if ( result || !aimAtEnt->IsType( idActor::Type ) ) {
 		return result;
