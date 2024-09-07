@@ -3031,7 +3031,7 @@ void idWeapon::Event_Melee( void ) {
 		idVec3 end = start + playerViewAxis[0] * ( meleeDistance * owner->PowerUpModifier( MELEE_DISTANCE ) );
 		gameLocal.clip.TracePoint( tr, start, end, MASK_SHOT_RENDERMODEL, owner );
 		if ( tr.fraction < 1.0f ) {
-			ent = gameLocal.GetTraceEntity( tr );
+			ent = gameLocal.entities[tr.c.entityNum];
 		} else {
 			ent = NULL;
 		}
@@ -3059,13 +3059,14 @@ void idWeapon::Event_Melee( void ) {
 			ent->ApplyImpulse( this, tr.c.id, tr.c.point, impulse );
 
 			// weapon stealing - do this before damaging so weapons are not dropped twice
+			idEntity* master = gameLocal.GetTraceEntity(tr);
 			if ( gameLocal.isMultiplayer
 				&& weaponDef && weaponDef->dict.GetBool( "stealing" )
-				&& ent->IsType( idPlayer::Type )
+				&& master->IsType(idPlayer::Type)
 				&& !owner->PowerUpActive( BERSERK )
-				&& ( gameLocal.gameType != GAME_TDM || gameLocal.serverInfo.GetBool( "si_teamDamage" ) || ( owner->team != static_cast< idPlayer * >( ent )->team ) )
+				&& ( gameLocal.gameType != GAME_TDM || gameLocal.serverInfo.GetBool( "si_teamDamage" ) || ( owner->team != static_cast< idPlayer * >( master )->team ) )
 				) {
-				owner->StealWeapon( static_cast< idPlayer * >( ent ) );
+				owner->StealWeapon( static_cast< idPlayer * >( master ) );
 			}
 
 			if ( ent->fl.takedamage ) {
