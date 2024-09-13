@@ -177,6 +177,8 @@ typedef struct {
 	bool					random_cycle_start			: 1;
 	bool					ai_no_turn					: 1;
 	bool					anim_turn					: 1;
+	bool					fast_chase					: 1;
+	bool					fast_wake_up				: 1;
 } animFlags_t;
 
 
@@ -533,6 +535,7 @@ public:
 	void						SetFrame( int channelNum, int animnum, int frame, int currenttime, int blendtime );
 	void						CycleAnim( int channelNum, int animnum, int currenttime, int blendtime );
 	void						PlayAnim( int channelNum, int animnum, int currenttime, int blendTime );
+	void						SetPlaybackRate(int channelNum, float rate, int currentTime);
 
 								// copies the current anim from fromChannelNum to channelNum.
 								// the copied anim will have frame commands disabled to avoid executing them twice.

@@ -296,7 +296,6 @@ idAI::idAI() {
 	blockedAttackTime	= 750;
 	turnRate			= 360.0f;
 	turnVel				= 0.0f;
-	fastChase			= false;
 	leadShots			= false;
 	anim_turn_yaw		= 0.0f;
 	anim_turn_amount	= 0.0f;
@@ -420,7 +419,6 @@ void idAI::Save( idSaveGame *savefile ) const {
 	savefile->WriteInt( blockedMoveTime );
 	savefile->WriteInt( blockedAttackTime );
 
-	savefile->WriteBool(fastChase);
 	savefile->WriteBool(leadShots);
 
 	savefile->WriteFloat( ideal_yaw );
@@ -558,7 +556,6 @@ void idAI::Restore( idRestoreGame *savefile ) {
 	savefile->ReadInt( blockedMoveTime );
 	savefile->ReadInt( blockedAttackTime );
 
-	savefile->ReadBool(fastChase);
 	savefile->ReadBool(leadShots);
 
 	savefile->ReadFloat( ideal_yaw );
@@ -742,7 +739,6 @@ void idAI::Spawn( void ) {
 	spawnArgs.GetFloat( "fly_pitch_scale",		"45",		fly_pitch_scale );
 	spawnArgs.GetFloat( "fly_pitch_max",		"30",		fly_pitch_max );
 
-	spawnArgs.GetBool("nightmare_fast", "0", fastChase);
 	spawnArgs.GetBool("can_lead_attacks", "0", leadShots);
 
 	spawnArgs.GetBool("nightmare_res", "0", nightmareRes);
@@ -3174,10 +3170,6 @@ void idAI::StaticMove( void ) {
 		gameRenderWorld->DebugLine( colorBlue, org, move.moveDest, gameLocal.msec, true );
 		gameRenderWorld->DebugLine( colorYellow, org + EyeOffset(), org + EyeOffset() + viewAxis[ 0 ] * physicsObj.GetGravityAxis() * 16.0f, gameLocal.msec, true );
 	}
-}
-
-bool idAI::IsFast( void ) const {
-	return fastChase && g_skill.GetInteger() >= 2;
 }
 
 /***********************************************************************

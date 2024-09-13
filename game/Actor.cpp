@@ -2107,6 +2107,7 @@ void idActor::SyncAnimChannels( int channel, int syncToChannel, int blendFrames 
 				} else {
 					headEnt->PlayIdleAnim( blendTime );
 				}
+				headAnimator->SetPlaybackRate(ANIMCHANNEL_ALL, syncAnim->GetPlaybackRate(), gameLocal.time);
 			}
 		}
 	} else if ( syncToChannel == ANIMCHANNEL_HEAD ) {
@@ -2125,6 +2126,7 @@ void idActor::SyncAnimChannels( int channel, int syncToChannel, int blendFrames 
 					animator.PlayAnim( channel, anim, gameLocal.time, blendTime );
 					animator.CurrentAnim( channel )->SetCycleCount( cycle );
 					animator.CurrentAnim( channel )->SetStartTime( starttime );
+					animator.SetPlaybackRate(channel, syncAnim->GetPlaybackRate(), gameLocal.time);
 				}
 			}
 		}
@@ -2606,7 +2608,6 @@ void idActor::Event_PlayAnim( int channel, const char *animname ) {
 	animFlags_t	flags;
 	idEntity *headEnt;
 	int	anim;
-	//float rate;
 
 	anim = GetAnim( channel, animname );
 	if ( !anim ) {
@@ -2618,14 +2619,6 @@ void idActor::Event_PlayAnim( int channel, const char *animname ) {
 		idThread::ReturnInt( 0 );
 		return;
 	}
-
-	/*if (animname == "sight" || animname == "teleport") {
-
-	} else if (animname == "walk" || animname == "run") {
-
-	} else {
-		rate = 1.0f;
-	}*/
 
 	switch( channel ) {
 	case ANIMCHANNEL_HEAD :

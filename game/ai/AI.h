@@ -301,7 +301,6 @@ protected:
 	float					anim_turn_angles;
 
 	// difficulty options
-	bool					fastChase;
 	bool					leadShots;
 
 	// physics
@@ -459,7 +458,6 @@ protected:
 	void					FlyTurn( void );
 	void					FlyMove( void );
 	void					StaticMove( void );
-	bool					IsFast( void ) const;
 
 	// damage
 	virtual bool			Pain( idEntity *inflictor, idEntity *attacker, int damage, const idVec3 &dir, int location );

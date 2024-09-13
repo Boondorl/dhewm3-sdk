@@ -1258,6 +1258,23 @@ bool idAnimBlend::SetSyncedAnimWeight( int num, float weight ) {
 
 /*
 =====================
+GetAnimRate
+=====================
+*/
+static float GetAnimRate(const idAnim& anim) {
+	float newRate = 1.0f;
+	if (g_skill.GetInteger() >= 2) {
+		if (anim.GetAnimFlags().fast_chase)
+			newRate = 1.1f;
+		else if (anim.GetAnimFlags().fast_wake_up)
+			newRate = 4.0f / 3.0f;
+	}
+
+	return newRate;
+}
+
+/*
+=====================
 idAnimBlend::SetFrame
 =====================
 */
@@ -1297,6 +1314,8 @@ void idAnimBlend::SetFrame( const idDeclModelDef *modelDef, int _animNum, int _f
 	blendStartTime		= currentTime - 1;
 	blendDuration		= blendTime;
 	blendStartValue		= 0.0f;
+
+	SetPlaybackRate(currentTime, GetAnimRate(*_anim));
 }
 
 /*
@@ -1337,6 +1356,8 @@ void idAnimBlend::CycleAnim( const idDeclModelDef *modelDef, int _animNum, int c
 	blendStartTime		= currentTime - 1;
 	blendDuration		= blendTime;
 	blendStartValue		= 0.0f;
+
+	SetPlaybackRate(currentTime, GetAnimRate(*_anim));
 }
 
 /*
@@ -1372,6 +1393,8 @@ void idAnimBlend::PlayAnim( const idDeclModelDef *modelDef, int _animNum, int cu
 	blendStartTime		= currentTime - 1;
 	blendDuration		= blendTime;
 	blendStartValue		= 0.0f;
+
+	SetPlaybackRate(currentTime, GetAnimRate(*_anim));
 }
 
 /*
@@ -2507,6 +2530,10 @@ bool idDeclModelDef::ParseAnim( idLexer &src, int numDefaultAnims ) {
 				flags.ai_no_turn = true;
 			} else if ( token == "anim_turn" ) {
 				flags.anim_turn = true;
+			} else if (token == "fast_chase") {
+				flags.fast_chase = true;
+			} else if (token == "fast_wake_up") {
+				flags.fast_wake_up = true;
 			} else if ( token == "frame" ) {
 				// create a frame command
 				int			framenum;
@@ -3493,6 +3520,14 @@ void idAnimator::SetFrame( int channelNum, int animNum, int frame, int currentTi
 	if ( entity ) {
 		entity->BecomeActive( TH_ANIMATE );
 	}
+}
+
+void idAnimator::SetPlaybackRate(int channelNum, float rate, int currentTime) {
+	if ((channelNum < 0) || (channelNum >= ANIM_NumAnimChannels)) {
+		gameLocal.Error("idAnimator::SetPlaybackRate : channel out of range");
+	}
+
+	channels[channelNum][0].SetPlaybackRate(currentTime, rate);
 }
 
 /*
