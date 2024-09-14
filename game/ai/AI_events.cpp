@@ -1526,7 +1526,7 @@ void idAI::Event_CanHitEnemyFromAnim( const char *animname ) {
 	gameLocal.clip.Translation( tr, start, fromPos, projectileClipModel, mat3_identity, MASK_SHOT_RENDERMODEL, this );
 	fromPos = tr.endpos;
 
-	if ( GetAimDir( fromPos, enemy.GetEntity(), this, dir ) ) {
+	if ( GetAimDir( fromPos, enemy.GetEntity(), this, dir, false ) ) {
 		idThread::ReturnInt( true );
 	} else {
 		idThread::ReturnInt( false );
@@ -2432,7 +2432,7 @@ void idAI::Event_LocateEnemy( void ) {
 	}
 
 	enemyEnt->GetAASLocation( aas, lastReachableEnemyPos, areaNum );
-	SetEnemyPosition();
+	SetEnemyPosition(true);
 	UpdateEnemyPosition();
 }
 

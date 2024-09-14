@@ -259,7 +259,7 @@ public:
 	void					TalkTo( idActor *actor );
 	talkState_t				GetTalkState( void ) const;
 
-	bool					GetAimDir( const idVec3 &firePos, idEntity *aimAtEnt, const idEntity *ignore, idVec3 &aimDir ) const;
+	bool					GetAimDir( const idVec3 &firePos, idEntity *aimAtEnt, const idEntity *ignore, idVec3 &aimDir, bool projectile ) const;
 
 	void					TouchedByFlashlight( idActor *flashlight_owner );
 
@@ -400,6 +400,8 @@ protected:
 	idVec3					lastVisibleEnemyEyeOffset;
 	idVec3					lastVisibleReachableEnemyPos;
 	idVec3					lastReachableEnemyPos;
+	idVec3					lastFirePos;
+	idVec3					lastFireEyeOffset;
 	bool					wakeOnFlashlight;
 
 	// script variables
@@ -506,7 +508,7 @@ protected:
 	// enemy management
 	void					ClearEnemy( void );
 	bool					EnemyPositionValid( void ) const;
-	void					SetEnemyPosition( void );
+	void					SetEnemyPosition( bool updateFirePos );
 	void					UpdateEnemyPosition( void );
 	void					SetEnemy( idActor *newEnemy );
 

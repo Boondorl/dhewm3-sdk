@@ -277,7 +277,7 @@ bool idAASFindAttackPosition::TestArea( const idAAS *aas, int areaNum ) {
 	axis = local_dir.ToMat3();
 	fromPos = areaCenter + fireOffset * axis;
 
-	return self->GetAimDir( fromPos, target, self, dir );
+	return self->GetAimDir( fromPos, target, self, dir, false );
 }
 
 /*
@@ -346,6 +346,8 @@ idAI::idAI() {
 	lastVisibleEnemyEyeOffset.Zero();
 	lastVisibleReachableEnemyPos.Zero();
 	lastReachableEnemyPos.Zero();
+	lastFirePos.Zero();
+	lastFireEyeOffset.Zero();
 	shrivel_rate		= 0.0f;
 	shrivel_start		= 0;
 	fl.neverDormant		= false;		// AI's can go dormant
@@ -515,6 +517,8 @@ void idAI::Save( idSaveGame *savefile ) const {
 	savefile->WriteVec3( lastVisibleEnemyEyeOffset );
 	savefile->WriteVec3( lastVisibleReachableEnemyPos );
 	savefile->WriteVec3( lastReachableEnemyPos );
+	savefile->WriteVec3(lastFirePos);
+	savefile->WriteVec3(lastFireEyeOffset);
 	savefile->WriteBool( wakeOnFlashlight );
 
 	savefile->WriteAngles( eyeMin );
@@ -664,6 +668,8 @@ void idAI::Restore( idRestoreGame *savefile ) {
 	savefile->ReadVec3( lastVisibleEnemyEyeOffset );
 	savefile->ReadVec3( lastVisibleReachableEnemyPos );
 	savefile->ReadVec3( lastReachableEnemyPos );
+	savefile->ReadVec3(lastFirePos);
+	savefile->ReadVec3(lastFireEyeOffset);
 
 	savefile->ReadBool( wakeOnFlashlight );
 
@@ -3674,7 +3680,7 @@ bool idAI::EnemyPositionValid( void ) const {
 idAI::SetEnemyPosition
 =====================
 */
-void idAI::SetEnemyPosition( void ) {
+void idAI::SetEnemyPosition( bool updateFirePos ) {
 	idActor		*enemyEnt = enemy.GetEntity();
 	int			enemyAreaNum;
 	int			areaNum;
@@ -3690,6 +3696,11 @@ void idAI::SetEnemyPosition( void ) {
 	lastVisibleReachableEnemyPos = lastReachableEnemyPos;
 	lastVisibleEnemyEyeOffset = enemyEnt->EyeOffset();
 	lastVisibleEnemyPos = enemyEnt->GetPhysics()->GetOrigin();
+	if (updateFirePos) {
+		lastFirePos = lastVisibleEnemyPos;
+		lastFireEyeOffset = lastVisibleEnemyEyeOffset;
+	}
+
 	if ( move.moveType == MOVETYPE_FLY ) {
 		pos = lastVisibleEnemyPos;
 		onGround = true;
@@ -3818,13 +3829,13 @@ void idAI::UpdateEnemyPosition( void ) {
 			AI_ENEMY_IN_FOV = true;
 		}
 
-		SetEnemyPosition();
+		SetEnemyPosition(true);
 	} else {
 		// check if we heard any sounds in the last frame
 		if ( enemyEnt == gameLocal.GetAlertEntity() ) {
 			float dist = ( enemyEnt->GetPhysics()->GetOrigin() - org ).LengthSqr();
 			if ( dist < Square( AI_HEARING_RANGE ) ) {
-				SetEnemyPosition();
+				SetEnemyPosition(false);
 			}
 		}
 	}
@@ -3860,7 +3871,7 @@ void idAI::SetEnemy( idActor *newEnemy ) {
 		}
 		// let the monster know where the enemy is
 		newEnemy->GetAASLocation( aas, lastReachableEnemyPos, enemyAreaNum );
-		SetEnemyPosition();
+		SetEnemyPosition(true);
 		SetChatSound();
 
 		lastReachableEnemyPos = lastVisibleEnemyPos;
@@ -3990,7 +4001,7 @@ void idAI::CreateProjectileClipModel( void ) const {
 idAI::GetAimDir
 =====================
 */
-bool idAI::GetAimDir( const idVec3 &firePos, idEntity *aimAtEnt, const idEntity *ignore, idVec3 &aimDir ) const {
+bool idAI::GetAimDir( const idVec3 &firePos, idEntity *aimAtEnt, const idEntity *ignore, idVec3 &aimDir, bool projectile ) const {
 	idVec3	targetPos1;
 	idVec3	targetPos2;
 	idVec3	delta;
@@ -4008,7 +4019,7 @@ bool idAI::GetAimDir( const idVec3 &firePos, idEntity *aimAtEnt, const idEntity 
 	}
 
 	if ( aimAtEnt == enemy.GetEntity() ) {
-		static_cast<idActor *>( aimAtEnt )->GetAIAimTargets( lastVisibleEnemyPos, targetPos1, targetPos2 );
+		static_cast<idActor *>( aimAtEnt )->GetAIAimTargets( projectile ? lastFirePos : lastVisibleEnemyPos, targetPos1, targetPos2 );
 	} else if ( aimAtEnt->IsType( idActor::Type ) ) {
 		static_cast<idActor *>( aimAtEnt )->GetAIAimTargets( aimAtEnt->GetPhysics()->GetOrigin(), targetPos1, targetPos2 );
 	} else {
@@ -4021,12 +4032,14 @@ bool idAI::GetAimDir( const idVec3 &firePos, idEntity *aimAtEnt, const idEntity 
 	const float dist = delta.LengthFast();
 	max_height = dist * projectile_height_to_distance_ratio;
 	// If on hard, try and lead the shot a little against a monster's enemy.
-	if (leadShots && projectileSpeed > 0.0f && aimAtEnt && aimAtEnt == enemy.GetEntity() && g_skill.GetInteger() >= 2 && dist < 256.0f) {
+	if (leadShots && projectileSpeed > 0.0f
+		&& aimAtEnt && aimAtEnt == enemy.GetEntity()
+		&& AI_ENEMY_VISIBLE && g_skill.GetInteger() >= 2 && dist < 192.0f) {
 		idVec3 targetVel = aimAtEnt->GetPhysics()->GetLinearVelocity();
 		targetVel.z *= 0.2f;
 		targetVel *= (dist / projectileSpeed);
 
-		idVec3 leadPos = targetPos1 + targetVel * (1.0f - dist / 256.0f);
+		idVec3 leadPos = targetPos1 + targetVel * (1.0f - dist / 192.0f);
 		result = PredictTrajectory(firePos, leadPos, projectileSpeed, projectileGravity, projectileClipModel, MASK_SHOT_RENDERMODEL, max_height, ignore, aimAtEnt, ai_debugTrajectory.GetBool() ? 1000 : 0, aimDir );
 		if (result) {
 			return result;
@@ -4179,7 +4192,7 @@ idProjectile *idAI::LaunchProjectile( const char *jointname, idEntity *target, b
 	muzzle = tr.endpos;
 
 	// set aiming direction
-	GetAimDir( muzzle, target, this, dir );
+	GetAimDir( muzzle, target, this, dir, true );
 	ang = dir.ToAngles();
 
 	// [D3R] This is now done before accounting for any kind of inaccuracy

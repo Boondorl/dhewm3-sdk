@@ -749,7 +749,7 @@ bool idInventory::Give( idPlayer *owner, const idDict &spawnArgs, const char *st
 		if ( ammo[ i ] >= max ) {
 			return false;
 		}
-		amount = ModifyAmount(value, 1.5f, 0.7f);
+		amount = ModifyAmount(value, 1.5f, 0.65f);
 		if ( amount ) {
 			ammo[ i ] += amount;
 			if ( ( max > 0 ) && ( ammo[ i ] > max ) ) {
