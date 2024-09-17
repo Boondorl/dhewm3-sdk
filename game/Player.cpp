@@ -2763,7 +2763,7 @@ void idPlayer::UpdateConditions( void ) {
 
 	const bool running = AI_RUN;
 	AI_RUN			= (usercmd.buttons & BUTTON_RUN) && (usercmd.forwardmove || usercmd.rightmove)
-						&& !AI_RELOAD && !AI_AIMING && !AI_AIMING_IN
+						&& (!AI_RELOAD || PowerUpActive(ADRENALINE)) && !AI_AIMING && !AI_AIMING_IN
 						&& (!pm_stamina.GetFloat() || stamina > pm_staminathreshold.GetFloat())
 						&& !physicsObj.OnLadder() && !physicsObj.IsCrouching();
 
@@ -5771,7 +5771,7 @@ void idPlayer::AdjustSpeed( void ) {
 				stamina = pm_stamina.GetFloat();
 			}
 		}
-		speed = (AI_AIMING || AI_AIMING_IN) ? pm_crouchspeed.GetFloat() : pm_walkspeed.GetFloat();
+		speed = (AI_AIMING || AI_AIMING_IN) && !PowerUpActive(ADRENALINE) ? pm_crouchspeed.GetFloat() : pm_walkspeed.GetFloat();
 		bobFrac = 0.0f;
 	}
 
