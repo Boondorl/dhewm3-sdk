@@ -2889,14 +2889,23 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float inaccuracy, f
 
 	// Get the real point the player is aiming (prevents weird offsets from spawning from the barrel)
 	idVec3 forward, left, up;
-	gameLocal.clip.Translation(tr, playerViewOrigin, playerViewOrigin + playerViewAxis[0] * 4096.0f, NULL, mat3_identity, MASK_SOLID, owner);
-	if (tr.endpos == muzzleOrigin) {
+	gameLocal.clip.Translation(tr, playerViewOrigin, playerViewOrigin + playerViewAxis[0] * 4096.0f, NULL, mat3_identity, MASK_SHOT_RENDERMODEL, owner);
+	idVec3 aimDir = tr.endpos - muzzleOrigin;
+
+	bool validAim = aimDir.LengthFast();
+	if (validAim) {
+		aimDir.Normalize();
+		// Make sure it's not at too wide of an angle from the direction the player is looking
+		// Note: Don't use the muzzle axis for this as it can be unreliable what direction it's pointing
+		validAim = playerViewAxis[0] * aimDir >= 0.866025f;
+	}
+
+	if (!validAim) {
 		forward = playerViewAxis[0];
 		left = playerViewAxis[1];
 		up = playerViewAxis[2];
 	} else {
-		forward = tr.endpos - muzzleOrigin;
-		forward.Normalize();
+		forward = aimDir;
 		forward.OrthogonalBasis(left, up);
 	}
 
