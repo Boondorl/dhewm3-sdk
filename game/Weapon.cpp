@@ -2887,10 +2887,20 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float inaccuracy, f
 		kick_endtime = gameLocal.realClientTime + muzzle_kick_maxtime;
 	}
 
+	// Get the real point the player is aiming (prevents weird offsets from spawning from the barrel)
+	idVec3 forward, left, up;
+	gameLocal.clip.Translation(tr, playerViewOrigin, playerViewOrigin + playerViewAxis[0] * 4096.0f, NULL, mat3_identity, MASK_SOLID, owner);
+	if (tr.endpos == muzzleOrigin) {
+		forward = playerViewAxis[0];
+		left = playerViewAxis[1];
+		up = playerViewAxis[2];
+	} else {
+		forward = tr.endpos - muzzleOrigin;
+		forward.Normalize();
+		forward.OrthogonalBasis(left, up);
+	}
+
 	idVec2 ofs = vec2_origin;
-	idVec3 forward = playerViewAxis[0];
-	idVec3 left = playerViewAxis[1];
-	idVec3 up = playerViewAxis[2];
 	// [D3R] Inaccuracy is applied once before anything else
 	if (inaccuracy)
 	{
