@@ -3578,13 +3578,13 @@ idGameLocal::RadiusDamage
 ============
 */
 void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEntity *attacker, idEntity *ignoreDamage, idEntity *ignorePush, const char *damageDefName, float dmgPower ) {
-	float		dist, damageScale, attackerDamageScale, attackerPushScale;
+	float		dist, damageScale, attackerDamageScale, attackerPushScale, radius, push;
 	idEntity *	ent;
 	idEntity *	entityList[ MAX_GENTITIES ];
 	int			numListedEntities;
 	idBounds	bounds;
 	idVec3		v, damagePoint, dir;
-	int			i, e, damage, radius, push;
+	int			i, e, damage;
 
 	const idDict *damageDef = FindEntityDefDict( damageDefName, false );
 	if ( !damageDef ) {
@@ -3593,13 +3593,13 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 	}
 
 	damageDef->GetInt( "damage", "20", damage );
-	damageDef->GetInt( "radius", "50", radius );
-	damageDef->GetInt( "push", va( "%d", damage * 100 ), push );
+	damageDef->GetFloat( "radius", "50", radius );
+	damageDef->GetFloat( "push", va( "%d", damage * 100 ), push );
 	damageDef->GetFloat( "attackerDamageScale", "0.5", attackerDamageScale );
 	damageDef->GetFloat( "attackerPushScale", "0", attackerPushScale );
 
-	if ( radius < 1 ) {
-		radius = 1;
+	if ( radius <= 0.0f ) {
+		radius = 1.0f;
 	}
 
 	bounds = idBounds( origin ).Expand( radius );
@@ -3672,7 +3672,7 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 	}
 
 	// push physics objects
-	if ( push ) {
+	if ( push > 0.0f ) {
 		RadiusPush( origin, radius, push * dmgPower, attacker, ignorePush, attackerPushScale, false );
 	}
 }

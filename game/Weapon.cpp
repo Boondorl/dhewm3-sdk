@@ -3067,15 +3067,19 @@ void idWeapon::Event_Melee( void ) {
 
 		if ( ent ) {
 
-			float push = meleeDef->dict.GetFloat( "push" );
-			idVec3 impulse = -push * owner->PowerUpModifier( SPEED ) * tr.c.normal;
-
 			if ( gameLocal.world->spawnArgs.GetBool( "no_Weapons" ) && ( ent->IsType( idActor::Type ) || ent->IsType( idAFAttachment::Type) ) ) {
 				idThread::ReturnInt( 0 );
 				return;
 			}
 
-			ent->ApplyImpulse( this, tr.c.id, tr.c.point, impulse );
+			float push = meleeDef->dict.GetFloat("push");
+			if (push < 0.0f)
+				push = 0.0f;
+
+			idVec3 impulse = push * owner->PowerUpModifier(SPEED) * playerViewAxis[0];
+			if (push > 0.0f) {
+				ent->ApplyImpulse(this, tr.c.id, tr.c.point, impulse);
+			}
 
 			// weapon stealing - do this before damaging so weapons are not dropped twice
 			idEntity* master = gameLocal.GetTraceEntity(tr);
@@ -3091,7 +3095,7 @@ void idWeapon::Event_Melee( void ) {
 			if ( ent->fl.takedamage ) {
 				idVec3 kickDir, globalKickDir;
 				meleeDef->dict.GetVector( "kickDir", "0 0 0", kickDir );
-				globalKickDir = muzzleAxis * kickDir;
+				globalKickDir = playerViewAxis * kickDir;
 				ent->Damage( owner, owner, globalKickDir, meleeDefName, owner->PowerUpModifier( MELEE_DAMAGE ), CLIPMODEL_ID_TO_JOINT_HANDLE(tr.c.id) );
 				hit = true;
 			}
