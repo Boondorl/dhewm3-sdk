@@ -3050,6 +3050,7 @@ idWeapon::Event_Melee
 =====================
 */
 void idWeapon::Event_Melee( void ) {
+	static const idBounds MeleeBounds = idBounds(idVec3(-1.0f, -1.0f, -1.0f), idVec3(1.0f, 1.0f, 1.0f));
 	idEntity	*ent;
 	trace_t		tr;
 
@@ -3060,7 +3061,7 @@ void idWeapon::Event_Melee( void ) {
 	if ( !gameLocal.isClient ) {
 		idVec3 start = playerViewOrigin;
 		idVec3 end = start + playerViewAxis[0] * ( meleeDistance * owner->PowerUpModifier( MELEE_DISTANCE ) );
-		gameLocal.clip.TracePoint( tr, start, end, MASK_SHOT_RENDERMODEL, owner );
+		gameLocal.clip.TraceBounds( tr, start, end, MeleeBounds, MASK_SHOT_RENDERMODEL, owner );
 		if ( tr.fraction < 1.0f ) {
 			ent = gameLocal.entities[tr.c.entityNum];
 		} else {
