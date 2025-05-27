@@ -936,6 +936,9 @@ bool idInventory::UseAmmo( ammo_t type, int amount ) {
 		return false;
 	}
 
+	if (g_infiniteAmmo.GetInteger() & 1)
+		return true;
+
 	// take an ammo away if not infinite
 	if ( ammo[ type ] >= 0 ) {
 		ammo[ type ] -= amount;

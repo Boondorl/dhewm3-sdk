@@ -2490,7 +2490,7 @@ void idWeapon::Event_UseAmmo( int amount ) {
 	}
 
 	owner->inventory.UseAmmo( ammoType, ( powerAmmo ) ? amount : ( amount * ammoRequired ) );
-	if ( clipSize && ammoRequired ) {
+	if ( clipSize && ammoRequired && !(g_infiniteAmmo.GetInteger() & 2)) {
 		ammoClip -= powerAmmo ? amount : ( amount * ammoRequired );
 		if ( ammoClip < 0 ) {
 			ammoClip = 0;
@@ -2859,7 +2859,7 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float inaccuracy, f
 		}
 
 		owner->inventory.UseAmmo( ammoType, ( powerAmmo ) ? dmgPower : ammoRequired );
-		if ( clipSize && ammoRequired ) {
+		if ( clipSize && ammoRequired && !(g_infiniteAmmo.GetInteger() & 2)) {
 			ammoClip -= powerAmmo ? dmgPower : 1;
 		}
 

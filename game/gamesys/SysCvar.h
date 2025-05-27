@@ -68,6 +68,7 @@ extern idCVar	g_useDynamicProtection;
 extern idCVar	g_healthTakeTime;
 extern idCVar	g_healthTakeAmt;
 extern idCVar	g_healthTakeLimit;
+extern idCVar	g_infiniteAmmo;
 
 extern idCVar	g_showPVS;
 extern idCVar	g_showTargets;
