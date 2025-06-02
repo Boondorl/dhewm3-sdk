@@ -572,7 +572,7 @@ bool idProjectile::Collide( const trace_t &collision, const idVec3 &velocity ) {
 
 	damageDefName = spawnArgs.GetString( "def_damage" );
 
-	hitEnt = NULL;
+	hitEnt = ent;
 
 	// if the hit entity takes damage
 	if ( ent->fl.takedamage ) {
@@ -594,7 +594,6 @@ bool idProjectile::Collide( const trace_t &collision, const idVec3 &velocity ) {
 
 		if ( damageDefName[0] != '\0' ) {
 			ent->Damage( this, owner.GetEntity(), dir, damageDefName, damageScale, CLIPMODEL_ID_TO_JOINT_HANDLE( collision.c.id ) );
-			hitEnt = ent;
 		}
 	}
 
@@ -2010,7 +2009,7 @@ void idBFGProjectile::Explode( const trace_t &collision, idEntity *hitEnt ) {
 	}
 
 	beamWidth = spawnArgs.GetFloat( "beam_WidthExplode" );
-	damage = spawnArgs.GetString( "def_damage" );
+	damage = spawnArgs.GetString( "def_damage_beam" );
 
 	for ( i = 0; i < beamTargets.Num(); i++ ) {
 		if ( ( beamTargets[i].target.GetEntity() == NULL ) || ( ownerEnt == NULL ) ) {
@@ -2040,7 +2039,7 @@ void idBFGProjectile::Explode( const trace_t &collision, idEntity *hitEnt ) {
 			}
 		}
 
-		if ( damage[0] && ( beamTargets[i].target.GetEntity()->entityNumber > gameLocal.numClients - 1 ) ) {
+		if ( damage[0] ) {
 			dir = beamTargets[i].target.GetEntity()->GetPhysics()->GetOrigin() - GetPhysics()->GetOrigin();
 			dir.Normalize();
 			beamTargets[i].target.GetEntity()->Damage( this, ownerEnt, dir, damage, damageScale, INVALID_JOINT );
