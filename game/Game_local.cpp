@@ -3579,12 +3579,12 @@ idGameLocal::RadiusDamage
 */
 void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEntity *attacker, idEntity *fullDamage, idEntity *ignorePush, const char *damageDefName, float dmgPower ) {
 	float		dist, damageScale, attackerDamageScale, attackerPushScale, radius, push, minScale;
-	idEntity *	ent;
-	idEntity *	entityList[ MAX_GENTITIES ];
-	int			numListedEntities;
+	idEntity *	ent, * realEnt;
+	idEntity *	entityList[ MAX_GENTITIES ], * alreadyHit[ MAX_GENTITIES ];
+	int			numListedEntities, numHitEntities;
 	idBounds	bounds;
 	idVec3		v, damagePoint, dir;
-	int			i, e, damage, minDamage;
+	int			i, e, h, damage, minDamage;
 
 	const idDict *damageDef = FindEntityDefDict( damageDefName, false );
 	if ( !damageDef ) {
@@ -3615,6 +3615,7 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 
 	// get all entities touching the bounds
 	numListedEntities = clip.EntitiesTouchingBounds( bounds, -1, entityList, MAX_GENTITIES );
+	numHitEntities = 0;
 
 	if ( inflictor && inflictor->IsType( idAFAttachment::Type ) ) {
 		inflictor = static_cast<idAFAttachment*>(inflictor)->GetBody();
@@ -3630,12 +3631,19 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 	for ( e = 0; e < numListedEntities; e++ ) {
 		ent = entityList[ e ];
 		assert( ent );
+		realEnt = ent->IsType(idAFAttachment::Type) ? static_cast<idAFAttachment*>(ent)->GetBody() : ent;
+
+		// Don't hit any entities where we already hit its attached body.
+		for ( h = 0; h < numHitEntities && alreadyHit[h] != realEnt; h++ );
+		if ( h < numHitEntities ) {
+			continue;
+		}
 
 		if ( !ent->fl.takedamage ) {
 			continue;
 		}
 
-		if ( ent == inflictor || ( ent->IsType( idAFAttachment::Type ) && static_cast<idAFAttachment*>(ent)->GetBody() == inflictor ) ) {
+		if ( ent == inflictor || realEnt == inflictor ) {
 			continue;
 		}
 
@@ -3668,14 +3676,15 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 
 			// get the damage scale
 			damageScale = dmgPower;
-			if (minDamage != damage && ent != fullDamage && (!ent->IsType(idAFAttachment::Type) || static_cast<idAFAttachment*>(ent)->GetBody() != fullDamage)) {
+			if ( minDamage != damage && ent != fullDamage && realEnt != fullDamage ) {
 				damageScale *= minScale + (1.0f - dist / radius) * (1.0f - minScale);
 			}
-			if ( ent == attacker || ( ent->IsType( idAFAttachment::Type ) && static_cast<idAFAttachment*>(ent)->GetBody() == attacker ) ) {
+			if ( ent == attacker || realEnt == attacker ) {
 				damageScale *= attackerDamageScale;
 			}
 
 			ent->Damage( inflictor, attacker, dir, damageDefName, damageScale, INVALID_JOINT );
+			alreadyHit[numHitEntities++] = realEnt;
 		}
 	}
 
