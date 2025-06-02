@@ -494,7 +494,7 @@ idProjectile::Collide
 */
 bool idProjectile::Collide( const trace_t &collision, const idVec3 &velocity ) {
 	idEntity	*ent;
-	idEntity	*ignore;
+	idEntity	*hitEnt;
 	const char	*damageDefName;
 	idVec3		dir;
 	float		push;
@@ -572,7 +572,7 @@ bool idProjectile::Collide( const trace_t &collision, const idVec3 &velocity ) {
 
 	damageDefName = spawnArgs.GetString( "def_damage" );
 
-	ignore = NULL;
+	hitEnt = NULL;
 
 	// if the hit entity takes damage
 	if ( ent->fl.takedamage ) {
@@ -594,7 +594,7 @@ bool idProjectile::Collide( const trace_t &collision, const idVec3 &velocity ) {
 
 		if ( damageDefName[0] != '\0' ) {
 			ent->Damage( this, owner.GetEntity(), dir, damageDefName, damageScale, CLIPMODEL_ID_TO_JOINT_HANDLE( collision.c.id ) );
-			ignore = ent;
+			hitEnt = ent;
 		}
 	}
 
@@ -608,7 +608,7 @@ bool idProjectile::Collide( const trace_t &collision, const idVec3 &velocity ) {
 		}
 	}
 
-	Explode( collision, ignore );
+	Explode( collision, hitEnt );
 
 	return true;
 }
@@ -758,10 +758,10 @@ void idProjectile::Fizzle( void ) {
 idProjectile::Event_RadiusDamage
 ================
 */
-void idProjectile::Event_RadiusDamage( idEntity *ignore ) {
+void idProjectile::Event_RadiusDamage( idEntity *hitEnt ) {
 	const char *splash_damage = spawnArgs.GetString( "def_splash_damage" );
 	if ( splash_damage[0] != '\0' ) {
-		gameLocal.RadiusDamage( physicsObj.GetOrigin(), this, owner.GetEntity(), ignore, this, splash_damage, damagePower );
+		gameLocal.RadiusDamage( physicsObj.GetOrigin(), this, owner.GetEntity(), hitEnt, this, splash_damage, damagePower );
 	}
 }
 
@@ -779,7 +779,7 @@ void idProjectile::Event_GetProjectileState( void ) {
 idProjectile::Explode
 ================
 */
-void idProjectile::Explode( const trace_t &collision, idEntity *ignore ) {
+void idProjectile::Explode( const trace_t &collision, idEntity *hitEnt ) {
 	const char *fxname, *light_shader, *sndExplode;
 	float		light_fadetime;
 	idVec3		normal;
@@ -894,9 +894,9 @@ void idProjectile::Explode( const trace_t &collision, idEntity *ignore ) {
 			if ( removeTime < delay * 1000 ) {
 				removeTime = ( delay + 0.10 ) * 1000;
 			}
-			PostEventSec( &EV_RadiusDamage, delay, ignore );
+			PostEventSec( &EV_RadiusDamage, delay, hitEnt );
 		} else {
-			Event_RadiusDamage( ignore );
+			Event_RadiusDamage( hitEnt );
 		}
 	}
 
@@ -1992,7 +1992,7 @@ void idBFGProjectile::Event_RemoveBeams() {
 idProjectile::Explode
 ================
 */
-void idBFGProjectile::Explode( const trace_t &collision, idEntity *ignore ) {
+void idBFGProjectile::Explode( const trace_t &collision, idEntity *hitEnt ) {
 	int			i;
 	idVec3		dmgPoint;
 	idVec3		dir;
@@ -2053,14 +2053,14 @@ void idBFGProjectile::Explode( const trace_t &collision, idEntity *ignore ) {
 	}
 
 	if ( !gameLocal.isClient ) {
-		if ( ignore != NULL ) {
+		if ( hitEnt != NULL ) {
 			PostEventMS( &EV_RemoveBeams, 750 );
 		} else {
 			PostEventMS( &EV_RemoveBeams, 0 );
 		}
 	}
 
-	return idProjectile::Explode( collision, ignore );
+	return idProjectile::Explode( collision, hitEnt );
 }
 
 

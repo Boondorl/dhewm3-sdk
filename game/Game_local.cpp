@@ -3577,14 +3577,14 @@ idActor *idGameLocal::GetAlertEntity( void ) {
 idGameLocal::RadiusDamage
 ============
 */
-void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEntity *attacker, idEntity *ignoreDamage, idEntity *ignorePush, const char *damageDefName, float dmgPower ) {
-	float		dist, damageScale, attackerDamageScale, attackerPushScale, radius, push;
+void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEntity *attacker, idEntity *fullDamage, idEntity *ignorePush, const char *damageDefName, float dmgPower ) {
+	float		dist, damageScale, attackerDamageScale, attackerPushScale, radius, push, minScale;
 	idEntity *	ent;
 	idEntity *	entityList[ MAX_GENTITIES ];
 	int			numListedEntities;
 	idBounds	bounds;
 	idVec3		v, damagePoint, dir;
-	int			i, e, damage;
+	int			i, e, damage, minDamage;
 
 	const idDict *damageDef = FindEntityDefDict( damageDefName, false );
 	if ( !damageDef ) {
@@ -3593,6 +3593,7 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 	}
 
 	damageDef->GetInt( "damage", "20", damage );
+	damageDef->GetInt( "minDamage", "0", minDamage );
 	damageDef->GetFloat( "radius", "50", radius );
 	damageDef->GetFloat( "push", va( "%d", damage * 100 ), push );
 	damageDef->GetFloat( "attackerDamageScale", "0.5", attackerDamageScale );
@@ -3600,6 +3601,14 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 
 	if ( radius <= 0.0f ) {
 		radius = 1.0f;
+	}
+	if ( minDamage > damage ) {
+		minDamage = damage;
+	}
+	if ( damage > 0 && minDamage >= 0 ) {
+		minScale = float(minDamage) / damage;
+	} else {
+		minScale = 0.0f;
 	}
 
 	bounds = idBounds( origin ).Expand( radius );
@@ -3613,8 +3622,8 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 	if ( attacker && attacker->IsType( idAFAttachment::Type ) ) {
 		attacker = static_cast<idAFAttachment*>(attacker)->GetBody();
 	}
-	if ( ignoreDamage && ignoreDamage->IsType( idAFAttachment::Type ) ) {
-		ignoreDamage = static_cast<idAFAttachment*>(ignoreDamage)->GetBody();
+	if ( fullDamage && fullDamage->IsType( idAFAttachment::Type ) ) {
+		fullDamage = static_cast<idAFAttachment*>(fullDamage)->GetBody();
 	}
 
 	// apply damage to the entities
@@ -3627,10 +3636,6 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 		}
 
 		if ( ent == inflictor || ( ent->IsType( idAFAttachment::Type ) && static_cast<idAFAttachment*>(ent)->GetBody() == inflictor ) ) {
-			continue;
-		}
-
-		if ( ent == ignoreDamage || ( ent->IsType( idAFAttachment::Type ) && static_cast<idAFAttachment*>(ent)->GetBody() == ignoreDamage ) ) {
 			continue;
 		}
 
@@ -3662,7 +3667,10 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 			dir[ 2 ] += 24;
 
 			// get the damage scale
-			damageScale = dmgPower * ( 1.0f - dist / radius );
+			damageScale = dmgPower;
+			if (minDamage != damage && ent != fullDamage && (!ent->IsType(idAFAttachment::Type) || static_cast<idAFAttachment*>(ent)->GetBody() != fullDamage)) {
+				damageScale *= minScale + (1.0f - dist / radius) * (1.0f - minScale);
+			}
 			if ( ent == attacker || ( ent->IsType( idAFAttachment::Type ) && static_cast<idAFAttachment*>(ent)->GetBody() == attacker ) ) {
 				damageScale *= attackerDamageScale;
 			}

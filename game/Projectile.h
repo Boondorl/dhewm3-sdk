@@ -64,7 +64,7 @@ public :
 	virtual void			Think( void );
 	virtual void			Killed( idEntity *inflictor, idEntity *attacker, int damage, const idVec3 &dir, int location );
 	virtual bool			Collide( const trace_t &collision, const idVec3 &velocity );
-	virtual void			Explode( const trace_t &collision, idEntity *ignore );
+	virtual void			Explode( const trace_t &collision, idEntity *hitEnt );
 	void					Fizzle( void );
 
 	static idVec3			GetVelocity( const idDict *projectile );
@@ -128,7 +128,7 @@ private:
 
 	void					Event_Explode( void );
 	void					Event_Fizzle( void );
-	void					Event_RadiusDamage( idEntity *ignore );
+	void					Event_RadiusDamage( idEntity *hitEnt );
 	void					Event_Touch( idEntity *other, trace_t *trace );
 	void					Event_GetProjectileState( void );
 };
@@ -214,7 +214,7 @@ public :
 	void					Spawn( void );
 	virtual void			Think( void );
 	virtual void			Launch( const idVec3 &start, const idVec3 &dir, const idVec3 &pushVelocity, const float timeSinceFire = 0.0f, const float launchPower = 1.0f, const float dmgPower = 1.0f );
-	virtual void			Explode( const trace_t &collision, idEntity *ignore );
+	virtual void			Explode( const trace_t &collision, idEntity *hitEnt );
 
 private:
 	idList<beamTarget_t>	beamTargets;
