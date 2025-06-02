@@ -102,7 +102,7 @@ const idEventDef EV_Thread_StrRight( "strRight", "sd", 's' );
 const idEventDef EV_Thread_StrSkip( "strSkip", "sd", 's' );
 const idEventDef EV_Thread_StrMid( "strMid", "sdd", 's' );
 const idEventDef EV_Thread_StrToFloat( "strToFloat", "s", 'f' );
-const idEventDef EV_Thread_RadiusDamage( "radiusDamage", "vEEEsf" );
+const idEventDef EV_Thread_RadiusDamage( "radiusDamage", "vEEEsfE" );
 const idEventDef EV_Thread_IsClient( "isClient", NULL, 'f' );
 const idEventDef EV_Thread_IsMultiplayer( "isMultiplayer", NULL, 'f' );
 const idEventDef EV_Thread_GetFrameTime( "getFrameTime", NULL, 'f' );
@@ -1732,8 +1732,8 @@ void idThread::Event_StrToFloat( const char *string ) {
 idThread::Event_RadiusDamage
 ================
 */
-void idThread::Event_RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEntity *attacker, idEntity *ignore, const char *damageDefName, float dmgPower ) {
-	gameLocal.RadiusDamage( origin, inflictor, attacker, ignore, ignore, damageDefName, dmgPower );
+void idThread::Event_RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEntity *attacker, idEntity *ignore, const char *damageDefName, float dmgPower, idEntity *fullDmg ) {
+	gameLocal.RadiusDamage( origin, inflictor, attacker, ignore, ignore, damageDefName, dmgPower, fullDmg );
 }
 
 /*

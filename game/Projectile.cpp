@@ -53,7 +53,7 @@ static const float BOUNCE_SOUND_MAX_VELOCITY	= 400.0f;
 
 const idEventDef EV_Explode( "<explode>", NULL );
 const idEventDef EV_Fizzle( "<fizzle>", NULL );
-const idEventDef EV_RadiusDamage( "<radiusdmg>", "e" );
+const idEventDef EV_RadiusDamage( "<radiusdmg>", "ee" );
 const idEventDef EV_GetProjectileState( "getProjectileState", NULL, 'd' );
 
 CLASS_DECLARATION( idEntity, idProjectile )
@@ -757,10 +757,10 @@ void idProjectile::Fizzle( void ) {
 idProjectile::Event_RadiusDamage
 ================
 */
-void idProjectile::Event_RadiusDamage( idEntity *hitEnt ) {
+void idProjectile::Event_RadiusDamage( idEntity *ignore, idEntity *hitEnt ) {
 	const char *splash_damage = spawnArgs.GetString( "def_splash_damage" );
 	if ( splash_damage[0] != '\0' ) {
-		gameLocal.RadiusDamage( physicsObj.GetOrigin(), this, owner.GetEntity(), hitEnt, this, splash_damage, damagePower );
+		gameLocal.RadiusDamage( physicsObj.GetOrigin(), this, owner.GetEntity(), ignore, this, splash_damage, damagePower, hitEnt );
 	}
 }
 
@@ -893,9 +893,9 @@ void idProjectile::Explode( const trace_t &collision, idEntity *hitEnt ) {
 			if ( removeTime < delay * 1000 ) {
 				removeTime = ( delay + 0.10 ) * 1000;
 			}
-			PostEventSec( &EV_RadiusDamage, delay, hitEnt );
+			PostEventSec( &EV_RadiusDamage, delay, NULL, hitEnt );
 		} else {
-			Event_RadiusDamage( hitEnt );
+			Event_RadiusDamage( NULL, hitEnt );
 		}
 	}
 

@@ -3577,7 +3577,7 @@ idActor *idGameLocal::GetAlertEntity( void ) {
 idGameLocal::RadiusDamage
 ============
 */
-void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEntity *attacker, idEntity *fullDamage, idEntity *ignorePush, const char *damageDefName, float dmgPower ) {
+void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEntity *attacker, idEntity *ignoreDmg, idEntity *ignorePush, const char *damageDefName, float dmgPower, idEntity *fullDamage ) {
 	float		dist, damageScale, attackerDamageScale, attackerPushScale, radius, push, minScale;
 	idEntity *	ent, * realEnt;
 	idEntity *	entityList[ MAX_GENTITIES ], * alreadyHit[ MAX_GENTITIES ];
@@ -3623,6 +3623,9 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 	if ( attacker && attacker->IsType( idAFAttachment::Type ) ) {
 		attacker = static_cast<idAFAttachment*>(attacker)->GetBody();
 	}
+	if (ignoreDmg && ignoreDmg->IsType(idAFAttachment::Type)) {
+		ignoreDmg = static_cast<idAFAttachment*>(ignoreDmg)->GetBody();
+	}
 	if ( fullDamage && fullDamage->IsType( idAFAttachment::Type ) ) {
 		fullDamage = static_cast<idAFAttachment*>(fullDamage)->GetBody();
 	}
@@ -3644,6 +3647,9 @@ void idGameLocal::RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEnt
 		}
 
 		if ( ent == inflictor || realEnt == inflictor ) {
+			continue;
+		}
+		if ( ent == ignoreDmg || realEnt == ignoreDmg ) {
 			continue;
 		}
 

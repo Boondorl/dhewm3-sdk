@@ -175,7 +175,7 @@ private:
 	void						Event_StrSkip( const char *string, int num );
 	void						Event_StrMid( const char *string, int start, int num );
 	void						Event_StrToFloat( const char *string );
-	void						Event_RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEntity *attacker, idEntity *ignore, const char *damageDefName, float dmgPower );
+	void						Event_RadiusDamage( const idVec3 &origin, idEntity *inflictor, idEntity *attacker, idEntity *ignore, const char *damageDefName, float dmgPower, idEntity *fullDmg );
 	void						Event_IsClient( void );
 	void						Event_IsMultiplayer( void );
 	void						Event_GetFrameTime( void );

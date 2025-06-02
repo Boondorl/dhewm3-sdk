@@ -128,7 +128,7 @@ private:
 
 	void					Event_Explode( void );
 	void					Event_Fizzle( void );
-	void					Event_RadiusDamage( idEntity *hitEnt );
+	void					Event_RadiusDamage( idEntity *ignore, idEntity *hitEnt );
 	void					Event_Touch( idEntity *other, trace_t *trace );
 	void					Event_GetProjectileState( void );
 };
