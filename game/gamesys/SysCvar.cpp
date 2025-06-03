@@ -269,7 +269,7 @@ idCVar pm_thirdPersonClip(			"pm_thirdPersonClip",		"1",			CVAR_GAME | CVAR_NETW
 idCVar pm_thirdPerson(				"pm_thirdPerson",			"0",			CVAR_GAME | CVAR_NETWORKSYNC | CVAR_BOOL, "enables third person view" );
 idCVar pm_thirdPersonDeath(			"pm_thirdPersonDeath",		"0",			CVAR_GAME | CVAR_NETWORKSYNC | CVAR_BOOL, "enables third person view when player dies" );
 idCVar pm_modelView(				"pm_modelView",				"0",			CVAR_GAME | CVAR_NETWORKSYNC | CVAR_INTEGER, "draws camera from POV of player model (1 = always, 2 = when dead)", 0, 2, idCmdSystem::ArgCompletion_Integer<0,2> );
-idCVar pm_airTics(					"pm_air",					"3750",			CVAR_GAME | CVAR_NETWORKSYNC | CVAR_INTEGER, "how long in frames (62.5/sec by default) the player can go without air before he starts taking damage" );
+idCVar pm_airTics(					"pm_air",					"2813",			CVAR_GAME | CVAR_NETWORKSYNC | CVAR_INTEGER, "how long in frames (62.5fps by default) the player can go without air before he starts taking damage" );
 
 idCVar g_showPlayerShadow(			"g_showPlayerShadow",		"0",			CVAR_GAME | CVAR_ARCHIVE | CVAR_BOOL, "enables shadow of player model" );
 idCVar g_showHud(					"g_showHud",				"1",			CVAR_GAME | CVAR_ARCHIVE | CVAR_BOOL, "" );

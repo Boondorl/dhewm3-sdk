@@ -5155,7 +5155,7 @@ void idPlayer::UpdateAir( void ) {
 				hud->HandleNamedEvent( "Air" );
 			}
 		}
-		airTics+=12;	// regain significantly faster than losing
+		airTics+=9;	// regain significantly faster than losing
 		if ( airTics > pm_airTics.GetInteger() ) {
 			airTics = pm_airTics.GetInteger();
 		}
