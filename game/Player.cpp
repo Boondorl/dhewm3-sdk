@@ -1320,7 +1320,7 @@ void idPlayer::Init( void ) {
 	stamina = pm_stamina.GetFloat();
 
 	// air always initialized to maximum too
-	airTics = pm_airTics.GetFloat();
+	airTics = pm_airTics.GetInteger();
 	airless = false;
 
 	gibDeath = false;
@@ -2955,7 +2955,7 @@ bool idPlayer::Give( const char *statname, const char *value ) {
 		if ( airTics >= pm_airTics.GetInteger() ) {
 			return false;
 		}
-		airTics += atoi( value ) / 100.0 * pm_airTics.GetInteger();
+		airTics += atoi( value );
 		if ( airTics > pm_airTics.GetInteger() ) {
 			airTics = pm_airTics.GetInteger();
 		}
@@ -5155,7 +5155,7 @@ void idPlayer::UpdateAir( void ) {
 				hud->HandleNamedEvent( "Air" );
 			}
 		}
-		airTics+=2;	// regain twice as fast as lose
+		airTics+=12;	// regain significantly faster than losing
 		if ( airTics > pm_airTics.GetInteger() ) {
 			airTics = pm_airTics.GetInteger();
 		}
