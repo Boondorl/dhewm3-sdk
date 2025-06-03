@@ -1605,6 +1605,7 @@ void idPlayer::Spawn( void ) {
 	if ( !gameLocal.isMultiplayer ) {
 		g_damageScale.SetFloat(1.0f); // [D3R] Always reset this back to normal
 		g_armorProtection.SetFloat(0.5f); // [D3R] Armor always absorbs half damage to stop it from sucking so much...
+		pm_airTics.SetInteger(2813); // [D3R] This is needed to set the value properly when loaded through the mods menu
 
 		if ( g_skill.GetInteger() == 0 ) { // [D3R] Only available on Easy difficulty now
 			if ( health < 25 ) {
